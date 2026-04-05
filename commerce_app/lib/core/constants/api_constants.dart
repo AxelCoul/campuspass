@@ -1,9 +1,12 @@
-/// URL de base de l'API backend (port 8081 = même que backend et admin).
-/// Émulateur Android : 10.0.2.2 ; appareil réel : IP de ta machine.
-const String kApiBaseUrl = 'http://10.0.2.2:8081/api';
-
-/// Racine du serveur pour les URLs d'images (sans /api).
-const String kServerBaseUrl = 'http://10.0.2.2:8081';
+/// URL de base de l'API. Défaut = émulateur. Prod : `--dart-define=API_BASE_URL=...`
+const String kApiBaseUrl = String.fromEnvironment(
+  'API_BASE_URL',
+  defaultValue: 'http://10.0.2.2:8081/api',
+);
+const String kServerBaseUrl = String.fromEnvironment(
+  'SERVER_BASE_URL',
+  defaultValue: 'http://10.0.2.2:8081',
+);
 
 /// Devise affichée dans l'app (Franc CFA).
 const String kCurrency = 'FCFA';

@@ -1,4 +1,6 @@
 HELP.md
+# Secrets locaux (copie depuis application-local.properties.example si besoin)
+src/main/resources/application-local.properties
 target/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/

@@ -1,6 +1,13 @@
-/// API backend (même serveur que commerce, port 8081)
-const String kApiBaseUrl = 'http://10.0.2.2:8081/api';
-const String kServerBaseUrl = 'http://10.0.2.2:8081';
+/// API backend. Défaut = émulateur Android vers localhost.
+/// Build prod : `flutter run/build --dart-define=API_BASE_URL=https://.../api --dart-define=SERVER_BASE_URL=https://...`
+const String kApiBaseUrl = String.fromEnvironment(
+  'API_BASE_URL',
+  defaultValue: 'http://10.0.2.2:8081/api',
+);
+const String kServerBaseUrl = String.fromEnvironment(
+  'SERVER_BASE_URL',
+  defaultValue: 'http://10.0.2.2:8081',
+);
 const String kCurrencySymbol = 'FCFA';
 const String kTokenKey = 'student_token';
 const String kUserIdKey = 'student_user_id';

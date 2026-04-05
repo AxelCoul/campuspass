@@ -1,0 +1,10 @@
+# Renommer en application-local.properties pour le dev local (fichier ignoré par Git).
+# yengapay.notify-url / return-url : remplacer par ton URL ngrok ou laisser vide si tu ne testes pas le paiement.
+
+# yengapay.api-key=
+# yengapay.site-id=
+# yengapay.group-id=
+# yengapay.project-id=
+# yengapay.paylink-url=
+# yengapay.notify-url=
+# yengapay.return-url=
