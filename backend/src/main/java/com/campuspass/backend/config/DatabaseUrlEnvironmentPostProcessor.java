@@ -47,7 +47,10 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
             if (path != null && path.startsWith("/")) {
                 path = path.substring(1);
             }
-            String jdbcUrl = String.format("jdbc:postgresql://%s:%d/%s", uri.getHost(), port, path);
+            // Render / cloud PostgreSQL : SSL requis pour que la connexion JDBC réussisse
+            String jdbcUrl = String.format(
+                    "jdbc:postgresql://%s:%d/%s?sslmode=require",
+                    uri.getHost(), port, path);
 
             Map<String, Object> map = new HashMap<>();
             map.put("spring.datasource.url", jdbcUrl);
