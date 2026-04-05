@@ -1,0 +1,39 @@
+<h2>Notifications</h2>
+<p class="subtitle">Envoyer une notification aux utilisateurs (audience : tous les étudiants, par ville ou par commerce).</p>
+
+@if (error) {
+  <p class="error-msg">{{ error }}</p>
+}
+@if (success) {
+  <p class="success-msg">{{ success }}</p>
+}
+
+<div class="card form-card">
+  <form (ngSubmit)="send()">
+    <div class="form-group">
+      <label for="title">Titre</label>
+      <input id="title" type="text" [(ngModel)]="title" name="title" placeholder="Titre de la notification" required />
+    </div>
+    <div class="form-group">
+      <label for="message">Message</label>
+      <textarea id="message" [(ngModel)]="message" name="message" rows="4" placeholder="Contenu du message" required></textarea>
+    </div>
+    <div class="form-group">
+      <label for="audience">Audience</label>
+      <select id="audience" [(ngModel)]="audience" name="audience">
+        @for (opt of audienceOptions; track opt.value) {
+          <option [value]="opt.value">{{ opt.label }}</option>
+        }
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="scheduledAt">Date d'envoi (optionnel)</label>
+      <input id="scheduledAt" type="datetime-local" [(ngModel)]="scheduledAt" name="scheduledAt" />
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary" [disabled]="sending">
+        {{ sending ? 'Envoi...' : 'Envoyer la notification' }}
+      </button>
+    </div>
+  </form>
+</div>

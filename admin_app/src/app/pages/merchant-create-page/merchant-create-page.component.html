@@ -1,0 +1,76 @@
+<h2>Créer un commerce</h2>
+@if (error) {
+  <p class="error-msg">{{ error }}</p>
+}
+<form (ngSubmit)="submit()">
+  <div class="card">
+    <h3>Propriétaire du compte</h3>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Prénom</label>
+        <input [(ngModel)]="model.firstName" name="firstName" required />
+      </div>
+      <div class="form-group">
+        <label>Nom</label>
+        <input [(ngModel)]="model.lastName" name="lastName" required />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Email (login)</label>
+        <input type="email" [(ngModel)]="model.email" name="email" required />
+      </div>
+      <div class="form-group">
+        <label>Téléphone</label>
+        <input [(ngModel)]="model.phoneNumber" name="phoneNumber" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Mot de passe initial</label>
+      <input type="password" [(ngModel)]="model.password" name="password" required minlength="6" />
+    </div>
+
+    <h3>Commerce</h3>
+    <div class="form-group">
+      <label>Nom du commerce</label>
+      <input [(ngModel)]="model.merchantName" name="merchantName" required />
+    </div>
+    <div class="form-group">
+      <label>Catégorie</label>
+      <select [(ngModel)]="model.categoryId" name="categoryId">
+        <option [ngValue]="undefined">— Aucune catégorie —</option>
+        @for (c of categories; track c.id) {
+          <option [ngValue]="c.id">{{ c.name }}</option>
+        }
+      </select>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Pays</label>
+        <select [(ngModel)]="model.country" name="country" (ngModelChange)="onCountryChanged()">
+          <option value="">--</option>
+          @for (item of countries; track item.id) {
+            <option [value]="item.name">{{ item.name }}</option>
+          }
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Ville</label>
+        <select [(ngModel)]="model.city" name="city">
+          <option value="">--</option>
+          @for (item of filteredCities; track item.id) {
+            <option [value]="item.name">{{ item.name }}</option>
+          }
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <button type="submit" class="btn btn-primary" [disabled]="loading">
+        {{ loading ? 'Création...' : 'Créer le commerce' }}
+      </button>
+      <a routerLink="/admin/merchants" class="btn btn-outline" style="margin-left: 0.5rem;">Annuler</a>
+    </div>
+  </div>
+</form>
+

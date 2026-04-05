@@ -1,0 +1,36 @@
+<h2>Logs système</h2>
+<p class="subtitle">Historique des connexions récentes.</p>
+
+@if (loading) {
+  <p>Chargement...</p>
+} @else {
+  <div class="card table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Utilisateur</th>
+          <th>Email</th>
+          <th>Date / Heure</th>
+          <th>IP</th>
+          <th>Appareil</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (log of logs; track log.id) {
+          <tr>
+            <td>{{ log.id }}</td>
+            <td>{{ log.userId }}</td>
+            <td>{{ log.email || '-' }}</td>
+            <td>{{ log.loginAt | date:'medium' }}</td>
+            <td>{{ log.ipAddress || '-' }}</td>
+            <td>{{ log.device || '-' }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    @if (logs.length === 0) {
+      <p class="no-data">Aucun log pour le moment.</p>
+    }
+  </div>
+}

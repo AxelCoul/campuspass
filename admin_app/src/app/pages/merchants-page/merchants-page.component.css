@@ -1,0 +1,129 @@
+.btn-sm {
+  padding: 0.35rem 0.65rem;
+  font-size: 0.85rem;
+}
+
+.merchants-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1.25rem;
+  margin-top: 1rem;
+}
+
+.merchant-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--card-bg, #fff);
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.2s ease, transform 0.15s ease;
+}
+
+.merchant-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.merchant-card__media {
+  display: block;
+  aspect-ratio: 16 / 10;
+  background: linear-gradient(145deg, #f1f5f9 0%, #e2e8f0 100%);
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+}
+
+.merchant-card__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.merchant-card__placeholder {
+  width: 100%;
+  height: 100%;
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  color: #64748b;
+}
+
+.merchant-card__placeholder-icon {
+  font-size: 2.5rem;
+  line-height: 1;
+  opacity: 0.85;
+}
+
+.merchant-card__placeholder-text {
+  font-size: 0.8rem;
+}
+
+.merchant-card__body {
+  padding: 1rem 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 1;
+}
+
+.merchant-card__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.merchant-card__title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.merchant-card__title a:hover {
+  text-decoration: underline;
+  color: var(--primary, #2563eb);
+}
+
+.merchant-card__meta {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.merchant-card__sep {
+  margin: 0 0.25rem;
+}
+
+.merchant-card__id {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.merchant-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.merchant-card__date {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.merchant-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.65rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid #f1f5f9;
+}

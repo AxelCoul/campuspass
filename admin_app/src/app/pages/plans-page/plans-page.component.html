@@ -1,0 +1,127 @@
+<h2>Plans d’abonnement</h2>
+<p class="subtitle">Gère les prix et les promotions des abonnements étudiants.</p>
+
+@if (error) {
+  <p class="error-msg">{{ error }}</p>
+}
+@if (success) {
+  <p class="success-msg">{{ success }}</p>
+}
+
+<div class="card form-card">
+  <h3>{{ editingPlan ? 'Modifier un plan' : 'Créer un plan' }}</h3>
+  <form (ngSubmit)="save()">
+    <div class="form-group">
+      <label for="name">Nom</label>
+      <input id="name" type="text" [(ngModel)]="form.name" name="name" required />
+    </div>
+
+    <div class="form-group">
+      <label for="type">Type</label>
+      <select id="type" [(ngModel)]="form.type" name="type">
+        <option value="MONTHLY">Mensuel</option>
+        <option value="YEARLY">Annuel</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="price">Prix (FCFA)</label>
+      <input id="price" type="number" [(ngModel)]="form.price" name="price" min="1" required />
+    </div>
+
+    <div class="form-group">
+      <label for="promoPrice">Prix promo (FCFA)</label>
+      <input id="promoPrice" type="number" [(ngModel)]="form.promoPrice" name="promoPrice" min="1" />
+      <small>Laisse vide si pas de promo.</small>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="startPromoDate">Début promo</label>
+        <input id="startPromoDate" type="date" [(ngModel)]="form.startPromoDate" name="startPromoDate" />
+      </div>
+      <div class="form-group">
+        <label for="endPromoDate">Fin promo</label>
+        <input id="endPromoDate" type="date" [(ngModel)]="form.endPromoDate" name="endPromoDate" />
+      </div>
+    </div>
+
+    <div class="form-group checkbox-group">
+      <label>
+        <input type="checkbox" [(ngModel)]="form.active" name="active" />
+        Plan actif
+      </label>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary" [disabled]="saving">
+        {{ saving ? 'Enregistrement...' : (editingPlan ? 'Mettre à jour' : 'Créer') }}
+      </button>
+      @if (editingPlan) {
+        <button type="button" class="btn btn-secondary" (click)="resetForm()">Annuler</button>
+      }
+    </div>
+  </form>
+</div>
+
+<div class="card">
+  <h3>Liste des plans</h3>
+
+  @if (loading) {
+    <p>Chargement des plans...</p>
+  } @else if (plans.length === 0) {
+    <p>Aucun plan pour le moment. Crée un plan mensuel et/ou annuel.</p>
+  } @else {
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Nom</th>
+          <th>Type</th>
+          <th>Prix (FCFA)</th>
+          <th>Prix effectif</th>
+          <th>Promo</th>
+          <th>Actif</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (p of plans; track p.id) {
+          <tr>
+            <td>{{ p.name }}</td>
+            <td>{{ p.type === 'MONTHLY' ? 'Mensuel' : 'Annuel' }}</td>
+            <td>{{ p.price | number: '1.0-0' }}</td>
+            <td>
+              @if (p.effectivePrice != null && p.effectivePrice !== p.price) {
+                <span class="promo-price">{{ p.effectivePrice | number: '1.0-0' }}</span>
+                <span class="old-price">{{ p.price | number: '1.0-0' }}</span>
+              } @else {
+                {{ (p.effectivePrice ?? p.price) | number: '1.0-0' }}
+              }
+            </td>
+            <td>
+              @if (p.promoActive) {
+                <span class="badge badge-success">Promo active</span>
+              } @else if (p.promoPrice) {
+                <span class="badge badge-muted">Promo hors période</span>
+              } @else {
+                -
+              }
+            </td>
+            <td>
+              @if (p.active) {
+                <span class="badge badge-success">Actif</span>
+              } @else {
+                <span class="badge badge-muted">Inactif</span>
+              }
+            </td>
+            <td class="actions">
+              <button type="button" class="btn btn-small" (click)="startEdit(p)">Modifier</button>
+              <button type="button" class="btn btn-small btn-danger" (click)="delete(p)">Supprimer</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>
+

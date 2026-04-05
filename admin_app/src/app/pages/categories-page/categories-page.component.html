@@ -1,0 +1,82 @@
+<h2>Catégories</h2>
+@if (error) {
+  <p class="error-msg">{{ error }}</p>
+}
+
+<div class="card" style="margin-bottom: 1rem;">
+  <h3>Créer une catégorie</h3>
+  <div class="form-row">
+    <div class="form-group">
+      <label>Nom</label>
+      <input [(ngModel)]="newCategory.name" name="newCategoryName" required />
+    </div>
+    <div class="form-group">
+      <label>Icône (emoji)</label>
+      <input [(ngModel)]="newCategory.icon" name="newCategoryIcon" placeholder="🍔, ☕, 🛍️..." />
+    </div>
+    <div class="form-group" style="flex: 1;">
+      <label>Description</label>
+      <input [(ngModel)]="newCategory.description" name="newCategoryDescription" />
+    </div>
+    <div class="form-group" style="align-self: flex-end;">
+      <button class="btn btn-primary" (click)="create()" [disabled]="creating || !newCategory.name.trim()">
+        {{ creating ? 'Création...' : 'Ajouter' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+@if (loading) {
+  <p>Chargement...</p>
+} @else {
+  <div class="card table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nom</th>
+          <th>Icône</th>
+          <th>Description</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (c of categories; track c.id) {
+          <tr>
+            <td>{{ c.id }}</td>
+            <td>
+              @if (editingId === c.id) {
+                <input [(ngModel)]="editModel.name" name="editName{{ c.id }}" />
+              } @else {
+                {{ c.name }}
+              }
+            </td>
+            <td>
+              @if (editingId === c.id) {
+                <input [(ngModel)]="editModel.icon" name="editIcon{{ c.id }}" placeholder="🍔, ☕, 🛍️..." />
+              } @else {
+                {{ c.icon || '-' }}
+              }
+            </td>
+            <td>
+              @if (editingId === c.id) {
+                <input [(ngModel)]="editModel.description" name="editDescription{{ c.id }}" />
+              } @else {
+                {{ c.description || '-' }}
+              }
+            </td>
+            <td>
+              @if (editingId === c.id) {
+                <button class="btn btn-primary btn-sm" (click)="saveEdit(c)">Enregistrer</button>
+                <button class="btn btn-outline btn-sm" (click)="cancelEdit()">Annuler</button>
+              } @else {
+                <button class="btn btn-outline btn-sm" (click)="startEdit(c)">Modifier</button>
+                <button class="btn btn-danger btn-sm" (click)="delete(c)">Supprimer</button>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

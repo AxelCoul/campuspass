@@ -1,0 +1,8 @@
+.subtitle { color: var(--text-muted); margin-top: -0.5rem; margin-bottom: 1rem; }
+.form-card { max-width: 560px; }
+.form-card h3 { margin: 1.25rem 0 0.75rem; font-size: 1rem; }
+.form-card h3:first-of-type { margin-top: 0; }
+.form-actions { margin-top: 1.25rem; }
+.checkbox-group label { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; }
+.error-msg { color: var(--danger); font-weight: 500; }
+.success-msg { color: var(--secondary); font-weight: 500; }

@@ -1,0 +1,32 @@
+<h2>Transactions offres</h2>
+@if (loading) { <p>Chargement...</p> }
+@else {
+  <div class="card table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Commerce</th>
+          <th>Étudiant</th>
+          <th>Montant initial</th>
+          <th>Réduction</th>
+          <th>Montant final</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (t of transactions; track t.id) {
+          <tr>
+            <td>{{ t.id }}</td>
+            <td>{{ t.merchantId }}</td>
+            <td>{{ t.userId }}</td>
+            <td>{{ t.originalAmount }}</td>
+            <td>{{ t.discountAmount }}</td>
+            <td>{{ t.finalAmount }}</td>
+            <td>{{ t.transactionDate | date:'short' }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

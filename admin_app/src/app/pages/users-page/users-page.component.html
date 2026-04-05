@@ -1,0 +1,33 @@
+<h2>Utilisateurs</h2>
+@if (loading) {
+  <p>Chargement...</p>
+} @else {
+  <div class="card table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nom</th>
+          <th>Email</th>
+          <th>Rôle</th>
+          <th>Statut</th>
+          <th>Inscription</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (u of users; track u.id) {
+          <tr>
+            <td>{{ u.id }}</td>
+            <td>{{ u.firstName }} {{ u.lastName }}</td>
+            <td>{{ u.email }}</td>
+            <td><span class="badge badge-info">{{ u.role }}</span></td>
+            <td>{{ u.status || 'ACTIVE' }}</td>
+            <td>{{ u.createdAt | date:'short' }}</td>
+            <td><a [routerLink]="['/admin/users', u.id]" class="btn btn-outline btn-sm">Voir profil</a></td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

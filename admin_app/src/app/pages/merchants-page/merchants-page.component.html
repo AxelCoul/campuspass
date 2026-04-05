@@ -1,0 +1,53 @@
+<h2>Commerces</h2>
+<p><a routerLink="/admin/merchants/create" class="btn btn-primary">Créer un commerce</a></p>
+@if (loading) {
+  <p>Chargement...</p>
+} @else {
+  <div class="merchants-grid">
+    @for (m of merchants; track m.id) {
+      <article class="merchant-card">
+        <a [routerLink]="['/admin/merchants', m.id]" class="merchant-card__media">
+          @if (hasImage(m)) {
+            <img [src]="resolveImageUrl(m)" [alt]="'Visuel — ' + m.name" loading="lazy" />
+          } @else {
+            <div class="merchant-card__placeholder" aria-hidden="true">
+              <span class="merchant-card__placeholder-icon">🏪</span>
+              <span class="merchant-card__placeholder-text">Pas d’image</span>
+            </div>
+          }
+        </a>
+        <div class="merchant-card__body">
+          <h3 class="merchant-card__title">
+            <a [routerLink]="['/admin/merchants', m.id]">{{ m.name }}</a>
+          </h3>
+          <p class="merchant-card__meta">
+            <span class="merchant-card__city">{{ m.city || 'Ville non renseignée' }}</span>
+            @if (m.country) {
+              <span class="merchant-card__sep">·</span>
+              <span>{{ m.country }}</span>
+            }
+          </p>
+          <p class="merchant-card__id">ID {{ m.id }} · propriétaire {{ m.ownerId }}</p>
+          <div class="merchant-card__footer">
+            <span
+              [attr.class]="
+                'badge badge-' +
+                (m.status === 'APPROVED' ? 'success' : m.status === 'PENDING' ? 'warning' : 'danger')
+              "
+              >{{ m.status }}</span>
+            @if (m.createdAt) {
+              <span class="merchant-card__date">{{ m.createdAt | date: 'short' }}</span>
+            }
+          </div>
+          <div class="merchant-card__actions">
+            <a [routerLink]="['/admin/merchants', m.id]" class="btn btn-outline btn-sm">Voir</a>
+            @if (m.status === 'PENDING') {
+              <button type="button" class="btn btn-success btn-sm" (click)="approve(m)">Approuver</button>
+              <button type="button" class="btn btn-outline btn-sm" (click)="reject(m)">Rejeter</button>
+            }
+          </div>
+        </div>
+      </article>
+    }
+  </div>
+}

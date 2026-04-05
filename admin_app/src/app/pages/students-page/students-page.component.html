@@ -1,0 +1,210 @@
+<h2>Étudiants</h2>
+
+@if (actionError) {
+  <p class="error-msg">{{ actionError }}</p>
+}
+@if (actionSuccess) {
+  <p class="success-msg">{{ actionSuccess }}</p>
+}
+
+<div class="filters card">
+  <div class="filter-row">
+    <div class="form-group">
+      <label for="city">Ville</label>
+      <input id="city" type="text" [(ngModel)]="filterCity" (ngModelChange)="onFilter()" placeholder="Filtrer par ville" />
+    </div>
+    <div class="form-group">
+      <label for="university">Université</label>
+      <input id="university" type="text" [(ngModel)]="filterUniversity" (ngModelChange)="onFilter()" placeholder="Filtrer par université" />
+    </div>
+    <div class="form-group">
+      <label for="status">Statut</label>
+      <select id="status" [(ngModel)]="filterStatus" (ngModelChange)="onFilter()">
+        <option value="">Tous</option>
+        <option value="ACTIVE">Actif</option>
+        <option value="SUSPENDED">Suspendu</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+@if (loading) {
+  <p>Chargement...</p>
+} @else {
+  <div class="card table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Nom</th>
+          <th>Email</th>
+          <th>Université</th>
+          <th>Ville</th>
+          <th>Pays</th>
+          <th>Coupons utilisés</th>
+          <th>Statut</th>
+          <th>Carte validée</th>
+          <th>État demande</th>
+          <th>Détails vérification</th>
+          <th>Inscription</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (s of filtered; track s.id) {
+          <tr>
+            <td>{{ s.firstName }} {{ s.lastName }}</td>
+            <td>{{ s.email }}</td>
+            <td>{{ s.university || '-' }}</td>
+            <td>{{ s.city || '-' }}</td>
+            <td>{{ s.country || '-' }}</td>
+            <td>{{ s.couponsUsed ?? 0 }}</td>
+            <td>
+              <span class="badge badge-{{ (s.status || 'ACTIVE') === 'ACTIVE' ? 'success' : 'danger' }}">
+                {{ s.status || 'ACTIVE' }}
+              </span>
+            </td>
+            <td>
+              @if (s.cardVerified) {
+                <span class="badge badge-success">Oui</span>
+              } @else {
+                <span class="badge badge-warning">Non</span>
+              }
+            </td>
+            <td>
+              <span class="badge badge-{{
+                s.verificationStatus === 'APPROVED' ? 'success' :
+                s.verificationStatus === 'REJECTED' ? 'danger' :
+                s.verificationStatus === 'PENDING' ? 'warning' : 'secondary'
+              }}">
+                {{ s.verificationStatus || 'NONE' }}
+              </span>
+            </td>
+            <td>
+              @if (s.studentCardNumber || s.studentCardImage) {
+                <div class="verification-details">
+                  <div class="verification-preview">
+                    @if (s.studentCardImage) {
+                      <img
+                        class="verification-img"
+                        [src]="resolveFileUrl(s.studentCardImage)"
+                        alt="Carte étudiante"
+                      />
+                      <a class="verification-link" [href]="resolveFileUrl(s.studentCardImage)" target="_blank" rel="noopener">
+                        Voir la carte
+                      </a>
+                    } @else {
+                      <div class="verification-noimage">Aucune photo</div>
+                    }
+                  </div>
+
+                  <div class="verification-fields">
+                  <div>
+                    <strong>Type&nbsp;:</strong>
+                    {{ s.verificationDocumentType || '—' }}
+                  </div>
+                  <div>
+                    <strong>Matricule&nbsp;:</strong>
+                    {{ s.studentCardNumber || '—' }}
+                  </div>
+                  <div *ngIf="s.verificationDate">
+                    <strong>Dernière vérif&nbsp;:</strong>
+                    {{ s.verificationDate | date:'short' }}
+                  </div>
+                  <div *ngIf="s.verificationRejectionReason">
+                    <strong>Motif rejet&nbsp;:</strong>
+                    {{ s.verificationRejectionReason }}
+                  </div>
+                  <div *ngIf="missingCount(s) > 0" class="missing-badges">
+                    <span class="badge badge-warning">Champs à vérifier : {{ missingCount(s) }}</span>
+                  </div>
+                </div>
+                </div>
+              } @else {
+                <span class="muted">Aucune demande</span>
+              }
+            </td>
+            <td>{{ s.createdAt | date:'short' }}</td>
+            <td class="actions">
+              @if (!s.cardVerified) {
+                <button type="button" class="btn btn-primary btn-sm" (click)="validateCard(s)">Valider carte</button>
+                <button type="button" class="btn btn-danger btn-sm" (click)="openRejectModal(s)">Rejeter</button>
+              }
+              @if ((s.status || 'ACTIVE') === 'ACTIVE') {
+                <button type="button" class="btn btn-danger btn-sm" (click)="suspend(s)">Suspendre</button>
+              } @else {
+                <button type="button" class="btn btn-secondary btn-sm" (click)="reactivate(s)">Réactiver</button>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    @if (filtered.length === 0) {
+      <p class="no-data">Aucun étudiant trouvé.</p>
+    }
+  </div>
+}
+
+@if (rejectModalOpen) {
+  <div class="modal-backdrop" (click)="closeRejectModal()"></div>
+  <div class="modal-panel card" role="dialog" aria-modal="true" aria-labelledby="reject-title">
+    <h3 id="reject-title">Rejeter la vérification</h3>
+    <p>
+      Étudiant : <strong>{{ selectedStudent?.firstName }} {{ selectedStudent?.lastName }}</strong>
+    </p>
+
+    @if (selectedStudent) {
+      <div class="reject-summary">
+        <div class="reject-preview">
+          @if (selectedStudent.studentCardImage) {
+            <img
+              class="verification-img reject-img"
+              [src]="resolveFileUrl(selectedStudent.studentCardImage)"
+              alt="Carte étudiante"
+            />
+            <a class="verification-link" [href]="resolveFileUrl(selectedStudent.studentCardImage)" target="_blank" rel="noopener">
+              Ouvrir l’image
+            </a>
+          } @else {
+            <div class="verification-noimage">Photo manquante</div>
+          }
+        </div>
+        <div class="reject-missing">
+          <div class="section-title">Ce qui manque / à vérifier</div>
+          @if (missingFields(selectedStudent).length === 0) {
+            <div class="muted">Aucun champ manquant détecté (insuffisance d’info / document illisible).</div>
+          } @else {
+            <div class="missing-list">
+              @for (m of missingFields(selectedStudent); track $index) {
+                <span class="badge badge-warning">{{ m }}</span>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <div class="form-group">
+      <label for="rejectReason">Motif de rejet</label>
+      <textarea
+        id="rejectReason"
+        rows="4"
+        [(ngModel)]="rejectReason"
+        placeholder="Explique pourquoi la demande est rejetée..."
+      ></textarea>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-secondary" [disabled]="rejectSubmitting" (click)="closeRejectModal()">
+        Annuler
+      </button>
+      <button
+        type="button"
+        class="btn btn-danger"
+        [disabled]="rejectSubmitting || !rejectReason.trim()"
+        (click)="confirmRejectCard()"
+      >
+        {{ rejectSubmitting ? 'Envoi...' : 'Confirmer le rejet' }}
+      </button>
+    </div>
+  </div>
+}

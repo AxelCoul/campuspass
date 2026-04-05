@@ -1,0 +1,198 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h2>Bannière accueil</h2>
+      <p class="page-intro">
+        Bandeau coloré sous le carrousel sur l’app étudiante (2ᵉ section). Une campagne active suffit ;
+        l’app affiche la première correspondant aux filtres (ville, segment, dates).
+      </p>
+    </div>
+  </div>
+
+@if (showForm) {
+  <div class="card form-card">
+    <h3>{{ editingAd ? 'Modifier la bannière' : 'Nouvelle bannière' }}</h3>
+    <form (ngSubmit)="submit()">
+      <div class="form-row">
+        <label>Commerce</label>
+        <select [(ngModel)]="form.merchantId" name="merchantId" required (ngModelChange)="loadMerchantOffers()">
+          @for (m of merchants; track m.id) {
+            <option [value]="m.id">{{ m.name }}</option>
+          }
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Titre</label>
+        <input type="text" [(ngModel)]="form.title" name="title" placeholder="Ex: Offre flash étudiants" />
+      </div>
+      <div class="form-row">
+        <label>Sous-titre (optionnel)</label>
+        <input type="text" [(ngModel)]="form.description" name="description" placeholder="Texte sous le titre sur l’app" />
+      </div>
+      <div class="form-row">
+        <label>Texte du bouton (optionnel)</label>
+        <input type="text" [(ngModel)]="form.ctaLabel" name="ctaLabel" placeholder="Ex: Voir l'offre, J'en profite" />
+        <small>Si vide : « Voir l’offre » sur l’app.</small>
+      </div>
+      <div class="form-row">
+        <label>Image (optionnel)</label>
+        <input type="file" (change)="onImageSelected($event)" accept="image/*" />
+        @if (imageSrcForForm) {
+          <div class="form-media-preview">
+            <span class="preview-caption">Aperçu</span>
+            <img [src]="imageSrcForForm" alt="" />
+          </div>
+        }
+      </div>
+      <div class="form-row">
+        <label>Vidéo (URL, optionnel)</label>
+        <input type="text" [(ngModel)]="form.videoUrl" name="videoUrl" placeholder="https://... ou /uploads/..." />
+        @if (videoSrcForPreview && !videoPreviewUrl) {
+          <div class="form-media-preview form-media-preview-video">
+            <span class="preview-caption">Aperçu vidéo</span>
+            <video [src]="videoSrcForPreview" controls muted playsinline preload="metadata"></video>
+          </div>
+        }
+      </div>
+      <div class="form-row">
+        <label>Uploader une vidéo (optionnel)</label>
+        <input
+          type="file"
+          accept="video/mp4,video/webm,video/ogg,video/quicktime,video/x-matroska,video/x-msvideo,video/*"
+          (change)="onVideoSelected($event)"
+          [disabled]="submitting"
+        />
+        @if (submitting && videoUploadProgress > 0) {
+          <small>Upload : {{ videoUploadProgress }}%</small>
+        }
+        @if (videoPreviewUrl) {
+          <div class="form-media-preview form-media-preview-video">
+            <span class="preview-caption">Fichier vidéo</span>
+            <video [src]="videoPreviewUrl" controls muted playsinline preload="metadata"></video>
+          </div>
+        }
+      </div>
+      <div class="form-row">
+        <label>Lien / destination (optionnel)</label>
+        <input type="text" [(ngModel)]="form.targetUrl" name="targetUrl" placeholder="/explore, /offer/123, https://..." />
+        <small>Sans lien ni offre liée : bandeau informatif sans bouton cliquable.</small>
+      </div>
+      <div class="form-row">
+        <label>Offre liée (optionnel)</label>
+        <select [(ngModel)]="form.offerId" name="offerId">
+          <option [ngValue]="undefined">— Aucune —</option>
+          @for (o of merchantOffers; track o.id) {
+            <option [ngValue]="o.id">{{ o.title }} ({{ o.id }})</option>
+          }
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Ciblage ville</label>
+        <select [(ngModel)]="form.targetCity" name="targetCity">
+          <option value="">Toutes</option>
+          @for (city of filteredCities; track city.id) {
+            <option [value]="city.name">{{ city.name }}</option>
+          }
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Ciblage pays</label>
+        <select [(ngModel)]="form.targetCountry" name="targetCountry" (ngModelChange)="onTargetCountryChanged()">
+          <option value="">Tous</option>
+          @for (country of countries; track country.id) {
+            <option [value]="country.name">{{ country.name }}</option>
+          }
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Ciblage université</label>
+        <select [(ngModel)]="form.targetUniversity" name="targetUniversity">
+          <option value="">Toutes</option>
+          @for (u of universities; track u.id) {
+            <option [value]="u.name">{{ u.name }}</option>
+          }
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Segment</label>
+        <input type="text" [(ngModel)]="form.targetSegment" name="targetSegment" placeholder="ALL, SUBSCRIBED, NON_SUBSCRIBED" />
+      </div>
+      <div class="form-row two-cols">
+        <div>
+          <label>Date début</label>
+          <input type="date" [(ngModel)]="form.startDate" name="startDate" />
+        </div>
+        <div>
+          <label>Date fin</label>
+          <input type="date" [(ngModel)]="form.endDate" name="endDate" />
+        </div>
+      </div>
+      <div class="form-row">
+        <label>Budget (FCFA, optionnel)</label>
+        <input type="number" [(ngModel)]="form.budget" name="budget" min="0" />
+      </div>
+
+      <div class="flash-strip-preview">
+        <p class="preview-caption">Aperçu type app (bandeau)</p>
+        <div class="flash-strip-inner">
+          <div class="flash-strip-text">
+            <strong>{{ form.title || 'Titre' }}</strong>
+            <span class="flash-strip-sub">{{ form.description || 'Sous-titre' }}</span>
+          </div>
+          <span class="flash-strip-cta">{{ form.ctaLabel?.trim() || 'Voir l’offre' }}</span>
+        </div>
+      </div>
+
+      @if (error) {
+        <p class="error">{{ error }}</p>
+      }
+      <div class="form-actions">
+        <button type="button" (click)="closeForm()">Annuler</button>
+        <button type="submit" [disabled]="submitting">{{ submitting ? 'Enregistrement...' : (editingAd ? 'Enregistrer' : 'Créer') }}</button>
+      </div>
+    </form>
+  </div>
+}
+
+<button class="btn-primary" type="button" (click)="openCreate()">+ Nouvelle bannière</button>
+
+@if (loading) { <p>Chargement...</p> }
+@else {
+  <div class="card table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Titre</th>
+          <th>Bouton</th>
+          <th>Budget</th>
+          <th>Début</th>
+          <th>Fin</th>
+          <th>Statut</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (a of ads; track a.id) {
+          <tr>
+            <td>{{ a.id }}</td>
+            <td>{{ a.title || '—' }}</td>
+            <td>{{ a.ctaLabel || '—' }}</td>
+            <td>{{ a.budget != null ? (a.budget | number:'1.0-0') : '—' }}</td>
+            <td>{{ a.startDate || '—' }}</td>
+            <td>{{ a.endDate || '—' }}</td>
+            <td><span class="badge badge-{{ a.status === 'ACTIVE' ? 'success' : 'warning' }}">{{ a.status }}</span></td>
+            <td>
+              <button type="button" class="btn-sm" (click)="openEdit(a)">Modifier</button>
+              <button type="button" class="btn-sm btn-danger" (click)="deleteAd(a)">Supprimer</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    @if (ads.length === 0) {
+      <p class="empty-hint">Aucune bannière. Créez-en une pour afficher la 2ᵉ section sur l’accueil de l’app.</p>
+    }
+  </div>
+}
+</div>

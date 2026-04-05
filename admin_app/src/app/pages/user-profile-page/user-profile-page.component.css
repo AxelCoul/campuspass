@@ -1,0 +1,7 @@
+.info-dl { display: grid; grid-template-columns: auto 1fr; gap: 0.5rem 1.5rem; }
+.info-dl dt { font-weight: 600; color: var(--text-muted); }
+.profile-actions { margin-top: 1rem; }
+.mini-table { font-size: 0.9rem; }
+.muted { color: var(--text-muted); }
+.success-msg { color: var(--secondary); font-weight: 500; }
+.error-msg { color: var(--danger); font-weight: 500; }

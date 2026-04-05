@@ -1,0 +1,300 @@
+================================================================================
+  SPÉCIFICATION COMPLÈTE FRONTEND ADMIN - PASS CAMPUS
+  + ÉTAT D'AVANCEMENT (CE QUI EST FAIT / CE QUI RESTE À FAIRE)
+================================================================================
+Date : 2026-03-08
+Projet : admin_app (Angular) - Console d'administration type UNiDAYS / Uber Eats
+================================================================================
+
+═══════════════════════════════════════════════════════════════════════════════
+PARTIE 1 — SPÉCIFICATION COMPLÈTE (DOCUMENT DE RÉFÉRENCE)
+═══════════════════════════════════════════════════════════════════════════════
+
+--------------------------------------------------------------------------------
+1. ACCÈS AU PANNEAU ADMIN
+--------------------------------------------------------------------------------
+URL d'accès :
+  - Production : admin.passcampus.com
+  - Local      : http://localhost:4200/admin
+
+Écran d'accès : Page Login Admin
+  - Champs : email, mot de passe
+  - Fonctions : login, mot de passe oublié, authentification JWT
+  - API backend : POST /api/auth/admin/login
+
+--------------------------------------------------------------------------------
+2. NIVEAUX D'ADMINISTRATEURS
+--------------------------------------------------------------------------------
+SUPER ADMIN
+  - Gérer les admins, commerces, étudiants, paiements, publicités
+  - Voir les statistiques
+
+ADMIN OPERATIONS
+  - Valider commerces, gérer offres, coupons, transactions
+
+ADMIN SUPPORT
+  - Voir utilisateurs, gérer réclamations, modérer avis, envoyer notifications
+
+--------------------------------------------------------------------------------
+3. LAYOUT PRINCIPAL
+--------------------------------------------------------------------------------
++----------------------------------------+
+| Header                                 |
++------+---------------------------------+
+|Menu  | Dashboard                       |
+|Side  |                                 |
+|Bar   |                                 |
++------+---------------------------------+
+
+--------------------------------------------------------------------------------
+4. SIDEBAR NAVIGATION (MENU LATÉRAL)
+--------------------------------------------------------------------------------
+Dashboard | Utilisateurs | Étudiants | Commerces | Offres | Coupons |
+Transactions | Paiements | Publicités | Catégories | Avis | Notifications |
+Statistiques | Paramètres | Admins | Logs système
+
+--------------------------------------------------------------------------------
+5. COULEURS DU DASHBOARD
+--------------------------------------------------------------------------------
+Primary    : #2D6CDF
+Secondary  : #00C48C
+Background : #F5F7FB (ou #F4F6F9)
+Card       : #FFFFFF
+Danger     : #FF4D4F
+Warning    : #FFC107
+Text       : #1F2937
+
+Style : moderne, cartes, graphiques, tableaux (SaaS).
+
+--------------------------------------------------------------------------------
+6. LISTE DE TOUTES LES PAGES ADMIN (≈ 20 PAGES)
+--------------------------------------------------------------------------------
+ 1. Login              /admin/login
+ 2. Dashboard          /admin/dashboard
+ 3. Users              /admin/users
+ 4. User Profile       /admin/users/:id
+ 5. Students           /admin/students
+ 6. Merchants          /admin/merchants
+ 7. Merchant Details   /admin/merchants/:id
+ 8. Offers             /admin/offers
+ 9. Offer Create       /admin/offers/create
+10. Offer Edit         /admin/offers/edit/:id
+11. Coupons            /admin/coupons
+12. Transactions       /admin/transactions
+13. Payments           /admin/payments
+14. Advertisements     /admin/advertisements
+15. Categories         /admin/categories
+16. Reviews            /admin/reviews
+17. Notifications      /admin/notifications
+18. Analytics          /admin/analytics
+19. Admins             /admin/admins
+20. Settings           /admin/settings
+21. Logs système       /admin/logs  (optionnel, pas encore dans les routes)
+
+--------------------------------------------------------------------------------
+7. DÉTAIL PAR ÉCRAN (OBJECTIF, UI, ACTIONS)
+--------------------------------------------------------------------------------
+
+1) Login Admin (/admin/login)
+   - Logo PASS CAMPUS, email, mot de passe, bouton Login, lien reset password.
+
+2) Dashboard (/admin/dashboard)
+   - Widgets : Total étudiants, commerces, offres actives, coupons utilisés aujourd'hui, revenus.
+   - Graphiques : utilisation coupons, croissance utilisateurs, commerces populaires.
+
+3) Liste utilisateurs (/admin/users)
+   - Table : ID, Nom, Email, Role, Statut, Date inscription.
+   - Actions : voir profil, suspendre, supprimer, réactiver.
+
+4) Profil utilisateur (/admin/users/:id)
+   - Infos : Nom, Email, Téléphone, Ville, Historique coupons, Transactions.
+   - Actions : suspendre, réactiver.
+
+5) Liste étudiants (/admin/students)
+   - Colonnes : Nom, Université, Ville, Points, Coupons utilisés, Statut.
+   - Filtres : ville, université, statut.
+   - Actions : valider carte étudiant, suspendre compte.
+
+6) Liste commerces (/admin/merchants)
+   - Table : Nom commerce, Propriétaire, Ville, Catégorie, Statut, Date inscription.
+   - Actions : approuver, refuser, voir détails, suspendre.
+
+7) Détail commerce (/admin/merchants/:id)
+   - Sections : Informations, Images, Offres, Transactions, Avis.
+   - Actions : approuver, suspendre, supprimer.
+
+8) Liste offres (/admin/offers)
+   - Table : Image, Titre, Commerce, Réduction, Date début/fin, Statut.
+   - Actions : modifier, supprimer, désactiver.
+
+9) Créer offre (/admin/offers/create)
+   - Formulaire : Titre, Description, Commerce, Catégorie, Image, Réduction %, Prix initial, Date début/fin.
+
+10) Modifier offre (/admin/offers/edit/:id)
+    - Même formulaire que création.
+
+11) Liste coupons (/admin/coupons)
+    - Table : Coupon ID, Étudiant, Offre, Statut (généré/utilisé/expiré), Date génération, Date utilisation.
+
+12) Transactions (/admin/transactions)
+    - Table : Transaction ID, Commerce, Étudiant, Montant initial, Réduction, Montant final, Date.
+    - Filtres : date, commerce, statut.
+
+13) Paiements (/admin/payments)
+    - Table : Payment ID, Transaction, Montant, Méthode (mobile money, card, cash), Statut, Date.
+
+14) Publicités (/admin/advertisements)
+    - Cards : Image, Titre, Position, Statut, Date début/fin.
+    - Actions : modifier, supprimer, activer. Créer publicité, upload image, position, planifier.
+
+15) Catégories (/admin/categories)
+    - Liste : Restaurant, Mode, Electronique, Supermarché, Transport.
+    - Actions : créer, modifier, supprimer.
+
+16) Avis (/admin/reviews)
+    - Table : Utilisateur, Commerce, Note, Commentaire, Date.
+    - Actions : supprimer, masquer, signaler.
+
+17) Notifications (/admin/notifications)
+    - Formulaire : Titre, Message, Audience (tous étudiants, ville, commerce), Date envoi.
+
+18) Analytics (/admin/analytics)
+    - Graphiques : croissance utilisateurs, utilisation coupons, revenus, offres populaires.
+
+19) Gestion admins (/admin/admins)
+    - Table : Nom, Email, Role, Statut.
+    - Actions : créer admin, modifier rôle, désactiver.
+
+20) Paramètres (/admin/settings)
+    - Commission plateforme, durée coupons, configuration email, notifications.
+
+21) Logs système (/admin/logs)
+    - Optionnel : consultation des logs.
+
+--------------------------------------------------------------------------------
+8. ARCHITECTURE ANGULAR
+--------------------------------------------------------------------------------
+src/app
+  - core          (auth, interceptors)
+  - layouts       (admin-layout avec sidebar + header)
+  - services      (API : users, students, merchants, offers, coupons, etc.)
+  - guards        (auth, role)
+  - modules       (si besoin)
+  - pages         (une page par écran)
+  - shared        (composants partagés)
+
+Nombre indicatif : Pages principales ~20, Composants UI ~40, Services API ~15, Guards ~3.
+
+================================================================================
+PARTIE 2 — ÉTAT D'AVANCEMENT (CE QUI EST FAIT / CE QUI RESTE À FAIRE)
+================================================================================
+
+--------------------------------------------------------------------------------
+✅ DÉJÀ FAIT (ADMIN_APP)
+--------------------------------------------------------------------------------
+
+• ROUTES ET LAYOUT
+  - Routes : login, dashboard, users, students, merchants, merchants/:id,
+    offers, offers/create, offers/edit/:id, coupons, transactions, payments,
+    advertisements, categories, reviews, notifications, analytics, admins, settings.
+  - Layout : sidebar fixe + header avec déconnexion et email utilisateur.
+  - Pas de route /admin/logs pour l’instant.
+
+• AUTHENTIFICATION
+  - Login avec email/mot de passe, appel POST auth/admin/login.
+  - JWT stocké (admin_token, admin_user), AuthService, AuthGuard, AuthInterceptor.
+  - Lien "Mot de passe oublié ?" présent en UI (lien #, non fonctionnel).
+
+• DESIGN GLOBAL
+  - Variables CSS : --primary #2D6CDF, --secondary #00C48C, --background #F4F6F9,
+    --card #FFFFFF, --danger #FF4D4F, --warning #FFC107, --text, sidebar, header.
+  - Cartes, tableaux, boutons, badges, formulaires de base.
+
+• PAGES IMPLÉMENTÉES (avec données / UI réelles)
+  - Login : formulaire + appel API.
+  - Dashboard : widgets (étudiants, commerces, offres actives, coupons aujourd’hui,
+    transactions, revenus) + message de bienvenue (pas encore de vrais graphiques).
+  - Users : liste en tableau (ID, Nom, Email, Rôle, Statut, Inscription), chargement.
+  - Merchants : liste + colonne Actions (Voir détail), statuts (APPROVED/PENDING/…).
+  - Merchant Detail : page existante (à vérifier contenu).
+  - Offers : liste + bouton "Créer une offre" + lien Modifier vers edit/:id.
+  - Offer Form : create/edit avec formulaire et redirection après succès.
+  - Coupons, Transactions, Payments, Advertisements, Categories, Reviews,
+    Notifications, Analytics, Settings : pages présentes (à détailler selon le code).
+
+• SERVICES API
+  - users.service, dashboard.service, merchants.service, offers.service,
+    coupons.service, transactions.service, payments.service, categories.service.
+  - Appels vers /admin/users, /admin/dashboard/stats, /admin/merchants, etc.
+
+• GUARDS
+  - authGuard : redirection vers /admin/login si non authentifié.
+  - roleGuard : vérification des rôles (hasRole), redirection vers dashboard si non autorisé.
+  - Les routes admin n’utilisent pas encore le roleGuard par route (pas de restriction par SUPER_ADMIN / ADMIN_OPERATIONS / ADMIN_SUPPORT).
+
+--------------------------------------------------------------------------------
+❌ PAS ENCORE FAIT / À COMPLÉTER
+--------------------------------------------------------------------------------
+
+• ÉTUDIANTS (page /admin/students)
+  - Actuellement : simple message "Liste des étudiants (filtrer les utilisateurs par rôle STUDENT)."
+  - À faire :
+    - Appeler une API qui renvoie les utilisateurs avec rôle STUDENT (ex. GET /admin/students ou GET /admin/users?role=STUDENT).
+    - Afficher un tableau : Nom, Université, Ville, Points, Coupons utilisés, Statut.
+    - Filtres : ville, université, statut.
+    - Actions : valider carte étudiant, suspendre compte.
+
+• ADMINISTRATEURS (page /admin/admins)
+  - Actuellement : simple message "Gestion des administrateurs (créer, modifier rôle, désactiver)."
+  - À faire :
+    - Liste des admins (table : Nom, Email, Rôle, Statut).
+    - Créer un admin (formulaire ou modal).
+    - Modifier le rôle d’un admin.
+    - Désactiver (et éventuellement réactiver) un admin.
+  - Backend : endpoints dédiés (ex. GET/POST/PUT /admin/admins, PATCH pour désactiver).
+
+• NIVEAUX D’ADMIN (SUPER ADMIN / OPERATIONS / SUPPORT)
+  - Appliquer le roleGuard sur les routes selon le rôle (ex. /admin/admins réservé SUPER_ADMIN).
+  - Masquer dans la sidebar les entrées de menu non autorisées selon le rôle.
+  - Backend : renvoyer le rôle dans la réponse login et le stocker dans admin_user.
+
+• PROFIL UTILISATEUR
+  - Page /admin/users/:id manquante dans les routes et à créer : détail d’un user, historique coupons, transactions, actions suspendre/réactiver.
+
+• MOT DE PASSE OUBLIÉ
+  - Lien présent, pas de page ni d’API (reset password) implémentée.
+
+• DASHBOARD
+  - Graphiques : transactions par jour, nouveaux utilisateurs, offres populaires (intégration chart lib si prévu).
+
+• PAGES À VÉRIFIER / ENRICHIR
+  - Coupons, Transactions, Payments : tableaux et filtres complets.
+  - Advertisements : CRUD + upload image, positions, planification.
+  - Reviews : actions supprimer, masquer, signaler.
+  - Notifications : formulaire envoi + audience.
+  - Analytics : vrais graphiques.
+  - Settings : champs commission, durée coupons, config email/notifications.
+
+• LOGS SYSTÈME
+  - Pas de route /admin/logs ni de page. À ajouter si requis.
+
+• ACTIONS DÉTAILLÉES SUR CERTAINES PAGES
+  - Users : boutons suspendre, supprimer, réactiver, lien vers profil.
+  - Merchants : boutons approuver/refuser en liste ou détail (backend déjà appelé approve/reject).
+
+================================================================================
+RÉSUMÉ PRIORITAIRE
+================================================================================
+
+À faire en priorité :
+  1. Page Étudiants : liste réelle (API + filtre rôle STUDENT), tableau, filtres, actions.
+  2. Page Admins : liste, créer admin, modifier rôle, désactiver ( + backend si besoin).
+  3. Restriction par rôle : roleGuard sur routes sensibles + sidebar conditionnelle.
+  4. Page Profil utilisateur /admin/users/:id.
+
+Ensuite :
+  - Mot de passe oublié, graphiques dashboard, logs, et finition des actions sur les autres pages.
+
+================================================================================
+FIN DU DOCUMENT
+================================================================================

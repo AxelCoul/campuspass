@@ -1,0 +1,81 @@
+<div class="page">
+  <div class="page-header">
+    <h2>Villes</h2>
+    <button type="button" class="btn btn-primary" (click)="openCreate()">Ajouter une ville</button>
+  </div>
+
+  @if (loading) {
+    <div class="card"><p>Chargement des villes...</p></div>
+  } @else if (cities.length === 0) {
+    <div class="card"><p>Aucune ville configurée.</p></div>
+  } @else {
+    <div class="card table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Ville</th>
+            <th>Pays</th>
+            <th>Active</th>
+            <th>Créée le</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (c of cities; track c.id) {
+            <tr>
+              <td>{{ c.name }}</td>
+              <td>{{ countryName(c.countryId) }}</td>
+              <td>
+                <span class="badge" [class.badge-success]="c.active" [class.badge-muted]="!c.active">
+                  {{ c.active ? 'Oui' : 'Non' }}
+                </span>
+              </td>
+              <td>{{ c.createdAt | date:'short' }}</td>
+              <td class="actions">
+                <button type="button" class="btn btn-sm" (click)="openEdit(c)">Modifier</button>
+                <button type="button" class="btn btn-sm btn-danger" (click)="delete(c)">Supprimer</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  @if (showForm) {
+    <div class="modal-backdrop">
+      <div class="modal">
+        <h3>{{ editing ? 'Modifier la ville' : 'Ajouter une ville' }}</h3>
+        <form (ngSubmit)="submit()">
+          <div class="form-group">
+            <label>Nom *</label>
+            <input type="text" [(ngModel)]="form.name" name="name" required />
+          </div>
+          <div class="form-group">
+            <label>Pays *</label>
+            <select [(ngModel)]="form.countryId" name="countryId" required>
+              @for (country of countries; track country.id) {
+                <option [ngValue]="country.id">{{ country.name }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-group checkbox-group">
+            <label>
+              <input type="checkbox" [(ngModel)]="form.active" name="active" />
+              Active
+            </label>
+          </div>
+          @if (error) {
+            <div class="error-message">{{ error }}</div>
+          }
+          <div class="modal-actions">
+            <button type="button" class="btn btn-outline" (click)="closeForm()">Annuler</button>
+            <button type="submit" class="btn btn-primary" [disabled]="submitting">
+              {{ submitting ? 'Enregistrement...' : 'Enregistrer' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+</div>

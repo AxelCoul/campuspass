@@ -1,0 +1,6 @@
+.error-msg { color: #c53030; margin-bottom: 0.75rem; }
+.card h3 { margin-top: 0; }
+.form-row { display: flex; gap: 1rem; }
+.form-group { margin-bottom: 0.75rem; flex: 1; }
+input { width: 100%; }
+

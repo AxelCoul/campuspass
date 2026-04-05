@@ -1,0 +1,71 @@
+<h2>Avis utilisateurs</h2>
+
+@if (actionError) {
+  <p class="error-msg">{{ actionError }}</p>
+}
+@if (actionSuccess) {
+  <p class="success-msg">{{ actionSuccess }}</p>
+}
+
+<div class="filters card">
+  <div class="filter-row">
+    <div class="form-group">
+      <label for="merchant">Commerce</label>
+      <select id="merchant" [(ngModel)]="filterMerchantId" (ngModelChange)="onFilter()">
+        <option [ngValue]="null">Tous les commerces</option>
+        @for (m of merchantOptions; track m.id) {
+          <option [ngValue]="m.id">{{ m.name }}</option>
+        }
+      </select>
+    </div>
+    <button type="button" class="btn btn-primary" (click)="onFilter()">Filtrer</button>
+  </div>
+</div>
+
+@if (loading) {
+  <p>Chargement...</p>
+} @else {
+  <div class="card table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Utilisateur</th>
+          <th>Commerce</th>
+          <th>Note</th>
+          <th>Commentaire</th>
+          <th>Statut</th>
+          <th>Date</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (r of filtered; track r.id) {
+          <tr>
+            <td>{{ r.id }}</td>
+            <td>{{ r.userId }}</td>
+            <td>{{ r.merchantId }}</td>
+            <td>{{ r.rating ?? '-' }}/5</td>
+            <td class="comment-cell">{{ r.comment || '-' }}</td>
+            <td>
+              <span class="badge badge-{{ r.status === 'VISIBLE' ? 'success' : r.status === 'HIDDEN' ? 'warning' : 'danger' }}">
+                {{ r.status }}
+              </span>
+            </td>
+            <td>{{ r.createdAt | date:'short' }}</td>
+            <td>
+              @if (r.status === 'VISIBLE') {
+                <button type="button" class="btn btn-warning btn-sm" (click)="hideReview(r)">Masquer</button>
+              } @else if (r.status === 'HIDDEN') {
+                <button type="button" class="btn btn-secondary btn-sm" (click)="showReview(r)">Afficher</button>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    @if (filtered.length === 0) {
+      <p class="no-data">Aucun avis.</p>
+    }
+  </div>
+}

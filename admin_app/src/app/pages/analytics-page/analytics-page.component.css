@@ -1,0 +1,21 @@
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.stat-card { text-align: center; padding: 1.25rem; }
+.stat-label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+.stat-value { font-size: 1.75rem; font-weight: 700; color: var(--primary); }
+.charts-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem; }
+.chart-card h3 { margin-top: 0; margin-bottom: 1rem; font-size: 1rem; }
+.bar-chart { display: flex; flex-direction: column; gap: 0.5rem; }
+.bar-row { display: flex; align-items: center; gap: 0.75rem; font-size: 0.9rem; }
+.bar-label { flex: 0 0 100px; }
+.bar-track { flex: 1; height: 20px; background: var(--background); border-radius: 4px; overflow: hidden; }
+.bar-fill { height: 100%; background: var(--primary); border-radius: 4px; transition: width 0.3s; }
+.bar-fill.users { background: var(--secondary); }
+.bar-value { flex: 0 0 2rem; text-align: right; font-weight: 600; }
+.mini-table { width: 100%; font-size: 0.9rem; }
+.mini-table th, .mini-table td { padding: 0.5rem; }
+.muted { color: var(--text-muted); }

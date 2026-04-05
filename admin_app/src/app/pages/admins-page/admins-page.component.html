@@ -1,0 +1,116 @@
+<h2>Gestion des administrateurs</h2>
+
+@if (actionError) {
+  <p class="error-msg">{{ actionError }}</p>
+}
+@if (actionSuccess) {
+  <p class="success-msg">{{ actionSuccess }}</p>
+}
+
+@if (canManageAdmins) {
+  <p><button type="button" class="btn btn-primary" (click)="openCreate()">Créer un admin</button></p>
+}
+
+@if (showCreateForm) {
+  <div class="card overlay-form">
+    <h3>Nouvel administrateur</h3>
+    @if (createError) {
+      <p class="error-msg">{{ createError }}</p>
+    }
+    <form (ngSubmit)="submitCreate()">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Prénom</label>
+          <input type="text" [(ngModel)]="createForm.firstName" name="firstName" required />
+        </div>
+        <div class="form-group">
+          <label>Nom</label>
+          <input type="text" [(ngModel)]="createForm.lastName" name="lastName" required />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" [(ngModel)]="createForm.email" name="email" required />
+      </div>
+      <div class="form-group">
+        <label>Mot de passe</label>
+        <input type="password" [(ngModel)]="createForm.password" name="password" required />
+      </div>
+      <div class="form-group">
+        <label>Niveau admin</label>
+        <select [(ngModel)]="createForm.adminLevel" name="adminLevel">
+          @for (level of adminLevels; track level) {
+            <option [value]="level">{{ level }}</option>
+          }
+        </select>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-outline" (click)="closeCreate()">Annuler</button>
+        <button type="submit" class="btn btn-primary" [disabled]="createLoading">{{ createLoading ? 'Création...' : 'Créer' }}</button>
+      </div>
+    </form>
+  </div>
+}
+
+@if (loading) {
+  <p>Chargement...</p>
+} @else {
+  <div class="card table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Nom</th>
+          <th>Email</th>
+          <th>Niveau</th>
+          <th>Statut</th>
+          <th>Créé le</th>
+          @if (canManageAdmins) {
+            <th>Actions</th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (a of admins; track a.id) {
+          <tr>
+            <td>{{ a.firstName }} {{ a.lastName }}</td>
+            <td>{{ a.email }}</td>
+            <td>
+              @if (editingRoleId === a.id) {
+                <span class="inline-edit">
+                  <select [(ngModel)]="editRoleValue">
+                    @for (level of adminLevels; track level) {
+                      <option [value]="level">{{ level }}</option>
+                    }
+                  </select>
+                  <button type="button" class="btn btn-primary btn-sm" (click)="saveRole()">OK</button>
+                  <button type="button" class="btn btn-outline btn-sm" (click)="cancelEditRole()">Annuler</button>
+                </span>
+              } @else {
+                <span class="badge badge-info">{{ a.adminLevel || 'ADMIN' }}</span>
+                @if (canManageAdmins && auth.getCurrentUser()?.id !== a.id) {
+                  <button type="button" class="btn btn-outline btn-sm" (click)="openEditRole(a)">Modifier rôle</button>
+                }
+              }
+            </td>
+            <td>
+              <span class="badge badge-{{ (a.status || 'ACTIVE') === 'ACTIVE' ? 'success' : 'danger' }}">
+                {{ a.status || 'ACTIVE' }}
+              </span>
+            </td>
+            <td>{{ a.createdAt | date:'short' }}</td>
+            @if (canManageAdmins) {
+              <td>
+                @if (auth.getCurrentUser()?.id !== a.id && (a.status || 'ACTIVE') === 'ACTIVE') {
+                  <button type="button" class="btn btn-danger btn-sm" (click)="disable(a)">Désactiver</button>
+                }
+              </td>
+            }
+          </tr>
+        }
+      </tbody>
+    </table>
+    @if (admins.length === 0) {
+      <p class="no-data">Aucun administrateur.</p>
+    }
+  </div>
+}

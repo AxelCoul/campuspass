@@ -1,0 +1,50 @@
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-brand">PASS CAMPUS</div>
+    <nav class="sidebar-nav">
+      <a routerLink="/admin/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Dashboard</a>
+      <a routerLink="/admin/users" routerLinkActive="active">Utilisateurs</a>
+      <a routerLink="/admin/students" routerLinkActive="active">Étudiants</a>
+      <a routerLink="/admin/merchants" routerLinkActive="active">Commerces</a>
+      <a routerLink="/admin/offers" routerLinkActive="active">Offres</a>
+      <a routerLink="/admin/coupons" routerLinkActive="active">Coupons</a>
+      <a routerLink="/admin/transactions" routerLinkActive="active">Transactions offres</a>
+      <a routerLink="/admin/payments" routerLinkActive="active">
+        Paiements abonnements
+        @if (paymentAlerts?.criticalAlertsCount && paymentAlerts!.criticalAlertsCount > 0) {
+          <span class="alert-badge">{{ paymentAlerts?.criticalAlertsCount }}</span>
+        }
+      </a>
+      <a routerLink="/admin/advertisements" routerLinkActive="active">Publicités</a>
+      <a routerLink="/admin/banners" routerLinkActive="active">Bannières</a>
+      <a routerLink="/admin/categories" routerLinkActive="active">Catégories</a>
+      <a routerLink="/admin/countries" routerLinkActive="active">Pays</a>
+      <a routerLink="/admin/cities" routerLinkActive="active">Villes</a>
+      <a routerLink="/admin/universities" routerLinkActive="active">Universités</a>
+      <a routerLink="/admin/reviews" routerLinkActive="active">Avis</a>
+      <a routerLink="/admin/notifications" routerLinkActive="active">Notifications</a>
+      <a routerLink="/admin/analytics" routerLinkActive="active">Statistiques</a>
+      @if (auth.hasAdminLevel('SUPER_ADMIN')) {
+        <a routerLink="/admin/plans" routerLinkActive="active">Plans d’abonnement</a>
+        <a routerLink="/admin/rewards" routerLinkActive="active">Récompenses fidélité</a>
+        <a routerLink="/admin/admins" routerLinkActive="active">Admins</a>
+      }
+      <a routerLink="/admin/settings" routerLinkActive="active">Paramètres</a>
+      @if (auth.hasAdminLevel('SUPER_ADMIN')) {
+        <a routerLink="/admin/logs" routerLinkActive="active">Logs système</a>
+      }
+    </nav>
+  </aside>
+  <div class="main">
+    <header class="header">
+      <h1 class="header-title">Panneau Admin</h1>
+      <div class="header-actions">
+        <span class="user-name">{{ auth.getCurrentUser()?.email }}</span>
+        <button type="button" class="btn btn-outline" (click)="logout()">Déconnexion</button>
+      </div>
+    </header>
+    <main class="content">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

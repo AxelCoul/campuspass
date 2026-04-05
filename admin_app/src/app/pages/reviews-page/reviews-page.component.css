@@ -1,0 +1,6 @@
+.filters .filter-row { display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end; }
+.filters .form-group { flex: 1; min-width: 200px; }
+.comment-cell { max-width: 200px; overflow: hidden; text-overflow: ellipsis; }
+.no-data { padding: 1rem; text-align: center; color: var(--text-muted); }
+.success-msg { color: var(--secondary); font-weight: 500; }
+.error-msg { color: var(--danger); font-weight: 500; }

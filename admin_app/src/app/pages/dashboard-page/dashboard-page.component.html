@@ -1,0 +1,119 @@
+<h2>Dashboard</h2>
+@if (loading) {
+  <p>Chargement...</p>
+} @else {
+  <div class="stats-grid">
+    <div class="card stat-card">
+      <span class="stat-label">Étudiants</span>
+      <span class="stat-value">{{ stats.totalStudents }}</span>
+    </div>
+    <div class="card stat-card">
+      <span class="stat-label">Commerces</span>
+      <span class="stat-value">{{ stats.totalMerchants }}</span>
+    </div>
+    <div class="card stat-card">
+      <span class="stat-label">Offres actives</span>
+      <span class="stat-value">{{ stats.activeOffers }}</span>
+    </div>
+    <div class="card stat-card">
+      <span class="stat-label">Coupons utilisés (aujourd'hui)</span>
+      <span class="stat-value">{{ stats.couponsUsedToday }}</span>
+    </div>
+    <div class="card stat-card">
+      <span class="stat-label">Transactions</span>
+      <span class="stat-value">{{ stats.totalTransactions }}</span>
+    </div>
+    <div class="card stat-card">
+      <span class="stat-label">Revenus</span>
+      <span class="stat-value">{{ stats.revenue | number:'1.0-0' }} FCFA</span>
+    </div>
+    <div class="card stat-card">
+      <span class="stat-label">Réductions totales générées</span>
+      <span class="stat-value">{{ stats.totalDiscountsGenerated | number:'1.0-0' }} FCFA</span>
+    </div>
+    <div class="card stat-card">
+      <span class="stat-label">Abonnements (paiements)</span>
+      <span class="stat-value">{{ stats.totalSubscriptions }}</span>
+    </div>
+  </div>
+  @if (paymentStats) {
+    <div class="card payment-dashboard">
+      <h3>Paiements Mobile Money</h3>
+      <div class="stats-inline">
+        <span><strong>Total revenus :</strong> {{ paymentStats.totalRevenue | number:'1.0-0' }} FCFA</span>
+        <span><strong>Paiements aujourd'hui :</strong> {{ paymentStats.paymentsToday }}</span>
+        <span><strong>Paiements ce mois :</strong> {{ paymentStats.paymentsThisMonth }}</span>
+      </div>
+    </div>
+  }
+  @if (paymentAlerts?.hasAlerts) {
+    <div class="card payment-dashboard" [class]="dashboardAlertClass">
+      <h3>Alertes paiements</h3>
+      <div class="stats-inline">
+        <span><strong>PENDING trop longs :</strong> {{ paymentAlerts?.pendingTooLongCount }}</span>
+        <span><strong>Taux d'échec 24h :</strong> {{ ((paymentAlerts?.failureRate24h || 0) * 100).toFixed(1) }}%</span>
+        <span><strong>Critiques :</strong> {{ paymentAlerts?.criticalAlertsCount }}</span>
+        <a routerLink="/admin/payments">Voir détails paiements</a>
+      </div>
+    </div>
+  }
+  @if (!chartsLoading && charts) {
+    <div class="charts-row">
+      <div class="card chart-card">
+        <h3>Transactions par jour (7 derniers jours)</h3>
+        <div class="bar-chart">
+          @for (p of charts.transactionsPerDay; track p.date) {
+            <div class="bar-row">
+              <span class="bar-label">{{ p.date }}</span>
+              <div class="bar-track">
+                <div class="bar-fill" [style.width.%]="(p.count / maxTransactionsCount()) * 100"></div>
+              </div>
+              <span class="bar-value">{{ p.count }}</span>
+            </div>
+          }
+        </div>
+      </div>
+      <div class="card chart-card">
+        <h3>Nouveaux utilisateurs par jour</h3>
+        <div class="bar-chart">
+          @for (p of charts.newUsersPerDay; track p.date) {
+            <div class="bar-row">
+              <span class="bar-label">{{ p.date }}</span>
+              <div class="bar-track">
+                <div class="bar-fill users" [style.width.%]="(p.count / maxUsersCount()) * 100"></div>
+              </div>
+              <span class="bar-value">{{ p.count }}</span>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+    <div class="card chart-card">
+      <h3>Offres populaires (top 5)</h3>
+      @if (charts.topOffers.length) {
+        <table class="mini-table">
+          <thead>
+            <tr>
+              <th>Offre</th>
+              <th>Utilisations</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (o of charts.topOffers; track o.offerId) {
+              <tr>
+                <td>{{ o.title || 'Offre #' + o.offerId }}</td>
+                <td>{{ o.usageCount }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      } @else {
+        <p class="muted">Aucune donnée.</p>
+      }
+    </div>
+  }
+  <div class="card">
+    <h3>Bienvenue sur le panneau admin Pass Campus</h3>
+    <p>Utilisez le menu latéral pour accéder aux différentes sections.</p>
+  </div>
+}

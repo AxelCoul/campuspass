@@ -1,0 +1,56 @@
+<h2>Offres</h2>
+<p><a routerLink="/admin/offers/create" class="btn btn-primary">Créer une offre</a></p>
+@if (loading) {
+  <p>Chargement...</p>
+} @else {
+  <div class="card table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Titre</th>
+          <th>Commerce</th>
+          <th>Réduction</th>
+          <th>Max/jour</th>
+          <th>Qté/pass</th>
+          <th>Début</th>
+          <th>Fin</th>
+          <th>Statut</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (o of offers; track o.id) {
+          <tr>
+            <td>{{ o.id }}</td>
+            <td>{{ o.title }}</td>
+            <td>{{ o.merchantId }}</td>
+            <td>{{ o.discountPercentage ?? o.discountAmount ?? '-' }}%</td>
+            <td>{{ o.maxPassesPerDayPerUser ?? '∞' }}</td>
+            <td>{{ o.maxQuantityPerPass ?? '∞' }}</td>
+            <td>{{ o.startDate | date:'short' }}</td>
+            <td>{{ o.endDate | date:'short' }}</td>
+            <td>
+              <span class="badge"
+                    [ngClass]="{
+                      'badge-success': o.status === 'ACTIVE',
+                      'badge-warning': o.status === 'PENDING' || o.status === 'PROPOSED',
+                      'badge-secondary': o.status === 'INACTIVE' || o.status === 'EXPIRED'
+                    }">
+                {{ o.status === 'PROPOSED' ? 'PROPOSED (à valider)' : o.status }}
+              </span>
+            </td>
+            <td>
+              <a [routerLink]="['/admin/offers/edit', o.id]" class="btn btn-outline btn-sm">Modifier</a>
+              @if (o.status === 'PENDING' || o.status === 'PROPOSED') {
+                <button class="btn btn-success btn-sm" (click)="setStatus(o, 'ACTIVE')">Valider</button>
+              } @else if (o.status === 'ACTIVE') {
+                <button class="btn btn-outline btn-sm" (click)="setStatus(o, 'INACTIVE')">Désactiver</button>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

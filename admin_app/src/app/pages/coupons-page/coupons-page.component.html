@@ -1,0 +1,32 @@
+<h2>Coupons</h2>
+@if (loading) { <p>Chargement...</p> }
+@else {
+  <div class="card table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Code</th>
+          <th>Étudiant</th>
+          <th>Offre</th>
+          <th>Statut</th>
+          <th>Généré le</th>
+          <th>Utilisé le</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (c of coupons; track c.id) {
+          <tr>
+            <td>{{ c.id }}</td>
+            <td>{{ c.couponCode }}</td>
+            <td>{{ c.userId }}</td>
+            <td>{{ c.offerId }}</td>
+            <td><span class="badge badge-{{ c.status === 'USED' ? 'success' : c.status === 'EXPIRED' ? 'danger' : 'warning' }}">{{ c.status }}</span></td>
+            <td>{{ c.generatedAt | date:'short' }}</td>
+            <td>{{ c.usedAt | date:'short' }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

@@ -1,0 +1,204 @@
+<h2>Publicités — carrousel accueil</h2>
+<p class="page-hint">Le bandeau sous le carrousel se gère dans <strong>Bannières</strong>.</p>
+
+@if (showForm) {
+  <div class="card form-card">
+    <h3>{{ editingAd ? 'Modifier la campagne' : 'Créer une campagne' }}</h3>
+    <form (ngSubmit)="submit()">
+      <div class="form-row">
+        <label>Commerce</label>
+        <select [(ngModel)]="form.merchantId" name="merchantId" required (ngModelChange)="loadMerchantOffers()">
+          @for (m of merchants; track m.id) {
+            <option [value]="m.id">{{ m.name }}</option>
+          }
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Titre</label>
+        <input type="text" [(ngModel)]="form.title" name="title" placeholder="Ex: Super promo KFC" />
+      </div>
+      <div class="form-row">
+        <label>Description (optionnel)</label>
+        <input type="text" [(ngModel)]="form.description" name="description" placeholder="Courte description affichée sous le titre" />
+      </div>
+      <div class="form-row">
+        <label>Texte du bouton (optionnel)</label>
+        <input type="text" [(ngModel)]="form.ctaLabel" name="ctaLabel" placeholder="Ex: Voir l'offre" />
+        <small>Si vide : « Voir l’offre » sur l’app.</small>
+      </div>
+      <div class="form-row">
+        <label>Image</label>
+        <input type="file" (change)="onImageSelected($event)" accept="image/*" />
+        @if (imageSrcForForm) {
+          <div class="form-media-preview">
+            <span class="preview-caption">Aperçu image</span>
+            <img [src]="imageSrcForForm" alt="Aperçu visuel de la campagne" />
+          </div>
+        }
+      </div>
+      <div class="form-row">
+        <label>Vidéo (URL, optionnel)</label>
+        <input type="text" [(ngModel)]="form.videoUrl" name="videoUrl" placeholder="https://.../pub.mp4 ou chemin /uploads/..." />
+        @if (videoSrcForPreview && !videoPreviewUrl) {
+          <div class="form-media-preview form-media-preview-video">
+            <span class="preview-caption">Aperçu vidéo (URL)</span>
+            <video [src]="videoSrcForPreview" controls muted playsinline preload="metadata"></video>
+          </div>
+        }
+      </div>
+      <div class="form-row">
+        <label>Uploader une vidéo (optionnel)</label>
+        <input
+          type="file"
+          accept="video/mp4,video/webm,video/ogg,video/quicktime,video/x-matroska,video/x-msvideo,video/*"
+          capture="environment"
+          (change)="onVideoSelected($event)"
+          [disabled]="submitting"
+        />
+        @if (submitting && videoUploadProgress > 0) {
+          <small>Upload vidéo : {{ videoUploadProgress }}%</small>
+        }
+        @if (videoPreviewUrl) {
+          <div class="form-media-preview form-media-preview-video">
+            <span class="preview-caption">Aperçu fichier vidéo (upload)</span>
+            <video [src]="videoPreviewUrl" controls muted playsinline preload="metadata"></video>
+          </div>
+        }
+      </div>
+      <div class="form-row">
+        <label>Destination du clic (optionnel)</label>
+        <input type="text" [(ngModel)]="form.targetUrl" name="targetUrl" placeholder="/subscription, /explore, /merchant/123, /offer/456" />
+        <small>Si vide et sans offre liée, la pub sera simple (non cliquable). Si offre liée, le clic ouvre le détail offre.</small>
+      </div>
+      <div class="form-row">
+        <label>Lier à une offre (optionnel)</label>
+        <select [(ngModel)]="form.offerId" name="offerId">
+          <option [ngValue]="undefined">— Aucune</option>
+          @for (o of merchantOffers; track o.id) {
+            <option [ngValue]="o.id">{{ o.title }} ({{ o.id }})</option>
+          }
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Ciblage ville (optionnel)</label>
+        <select [(ngModel)]="form.targetCity" name="targetCity">
+          <option value="">--</option>
+          @for (city of filteredCities; track city.id) {
+            <option [value]="city.name">{{ city.name }}</option>
+          }
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Ciblage pays (optionnel)</label>
+        <select [(ngModel)]="form.targetCountry" name="targetCountry" (ngModelChange)="onTargetCountryChanged()">
+          <option value="">--</option>
+          @for (country of countries; track country.id) {
+            <option [value]="country.name">{{ country.name }}</option>
+          }
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Ciblage université (optionnel)</label>
+        <select [(ngModel)]="form.targetUniversity" name="targetUniversity">
+          <option value="">--</option>
+          @for (u of universities; track u.id) {
+            <option [value]="u.name">{{ u.name }}</option>
+          }
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Segment (ALL, SUBSCRIBED, NON_SUBSCRIBED)</label>
+        <input type="text" [(ngModel)]="form.targetSegment" name="targetSegment" placeholder="ALL, SUBSCRIBED, NON_SUBSCRIBED..." />
+      </div>
+      <div class="form-row two-cols">
+        <div>
+          <label>Début</label>
+          <input type="date" [(ngModel)]="form.startDate" name="startDate" />
+        </div>
+        <div>
+          <label>Fin</label>
+          <input type="date" [(ngModel)]="form.endDate" name="endDate" />
+        </div>
+      </div>
+      <div class="form-row">
+        <label>Budget (FCFA)</label>
+        <input type="number" [(ngModel)]="form.budget" name="budget" placeholder="20000" min="0" />
+      </div>
+      <div class="ad-preview">
+        <p>Aperçu mobile :</p>
+        <div class="ad-preview-card">
+          @if (videoSrcForPreview) {
+            <video
+              [src]="videoSrcForPreview"
+              autoplay
+              muted
+              loop
+              playsinline
+              style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px;"
+            ></video>
+            <div class="ad-preview-gradient">
+              <span class="badge badge-sponsor">Sponsorisé</span>
+              <h4>{{ form.title || 'Titre de la campagne' }}</h4>
+              <p>{{ form.description || 'Texte de description de la campagne.' }}</p>
+            </div>
+          } @else {
+            <div class="ad-preview-image">
+              @if (imageSrcForForm) {
+                <img class="ad-preview-bg" [src]="imageSrcForForm" alt="" />
+              }
+              <div class="ad-preview-gradient">
+                <span class="badge badge-sponsor">Sponsorisé</span>
+                <h4>{{ form.title || 'Titre de la campagne' }}</h4>
+                <p>{{ form.description || 'Texte de description de la campagne.' }}</p>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+      @if (error) {
+        <p class="error">{{ error }}</p>
+      }
+      <div class="form-actions">
+        <button type="button" (click)="closeForm()">Annuler</button>
+        <button type="submit" [disabled]="submitting">{{ submitting ? 'Enregistrement...' : (editingAd ? 'Enregistrer' : 'Créer la campagne') }}</button>
+      </div>
+    </form>
+  </div>
+}
+
+<button class="btn-primary" (click)="openCreate()">+ Créer une campagne</button>
+
+@if (loading) { <p>Chargement...</p> }
+@else {
+  <div class="card table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Titre</th>
+          <th>Budget (FCFA)</th>
+          <th>Début</th>
+          <th>Fin</th>
+          <th>Statut</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (a of ads; track a.id) {
+          <tr>
+            <td>{{ a.id }}</td>
+            <td>{{ a.title || '—' }}</td>
+            <td>{{ a.budget != null ? (a.budget | number:'1.0-0') : '—' }}</td>
+            <td>{{ a.startDate || '—' }}</td>
+            <td>{{ a.endDate || '—' }}</td>
+            <td><span class="badge badge-{{ a.status === 'ACTIVE' ? 'success' : 'warning' }}">{{ a.status }}</span></td>
+            <td>
+              <button type="button" class="btn-sm" (click)="openEdit(a)">Modifier</button>
+              <button type="button" class="btn-sm btn-danger" (click)="deleteAd(a)">Supprimer</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

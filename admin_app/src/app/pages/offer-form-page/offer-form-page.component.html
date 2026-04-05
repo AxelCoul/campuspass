@@ -1,0 +1,191 @@
+<h2>{{ isEdit ? 'Modifier l\'offre' : 'Créer une offre' }}</h2>
+@if (error) { <p class="error-msg">{{ error }}</p> }
+@if (success) { <p class="success-msg">{{ success }}</p> }
+<form (ngSubmit)="submit()">
+  <div class="card">
+    <div class="form-group">
+      <label>Commerce</label>
+      <select [(ngModel)]="model.merchantId" name="merchantId" required>
+        @for (m of merchants; track m.id) { <option [value]="m.id">{{ m.name }}</option> }
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Catégorie</label>
+      <select [(ngModel)]="model.categoryId" name="categoryId">
+        <option [ngValue]="undefined">--</option>
+        @for (c of categories; track c.id) { <option [value]="c.id">{{ c.name }}</option> }
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Titre</label>
+      <input [(ngModel)]="model.title" name="title" required />
+    </div>
+    <div class="form-group">
+      <label>Description</label>
+      <textarea [(ngModel)]="model.description" name="description" rows="3"></textarea>
+    </div>
+    <div class="form-group">
+      <label>Image</label>
+      <input type="file" (change)="onImageSelected($event)" accept="image/*" multiple />
+      @if (imagePreviewList.length > 0) {
+        <div class="image-preview">
+          <span class="preview-label">Aperçu (max 3)</span>
+          <div class="image-preview-frame">
+            <img [src]="imageDisplaySrc" alt="Image de l'offre" />
+          </div>
+          <div class="image-thumbs">
+            @for (src of imagePreviewList; track $index) {
+              <button
+                type="button"
+                class="thumb-btn"
+                [class.thumb-active]="activeImageIndex === $index"
+                (click)="activeImageIndex = $index"
+              >
+                <img [src]="src" alt="" />
+              </button>
+            }
+          </div>
+        </div>
+      }
+    </div>
+    <div class="form-group pricing-mode">
+      <label>Tarification</label>
+      <div class="pricing-mode-options">
+        <label class="radio-line">
+          <input
+            type="radio"
+            name="pricingMode"
+            value="from_prices"
+            [(ngModel)]="pricingMode"
+            (change)="onPricingModeChange()"
+          />
+          <span>Prix initial + prix final — le <strong>%</strong> est calculé automatiquement (affiché sur la carte avec les deux prix)</span>
+        </label>
+        <label class="radio-line">
+          <input
+            type="radio"
+            name="pricingMode"
+            value="percent_only"
+            [(ngModel)]="pricingMode"
+            (change)="onPricingModeChange()"
+          />
+          <span>Pourcentage seul — seul le <strong>%</strong> est affiché sur la carte (pas de prix avant / après)</span>
+        </label>
+      </div>
+    </div>
+    @if (pricingMode === 'from_prices') {
+      <div class="form-row">
+        <div class="form-group">
+          <label>Prix initial (FCFA)</label>
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            [(ngModel)]="model.originalPrice"
+            name="originalPrice"
+            (ngModelChange)="recalculatePercentFromPrices()"
+          />
+        </div>
+        <div class="form-group">
+          <label>Prix final (FCFA)</label>
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            [(ngModel)]="model.finalPrice"
+            name="finalPrice"
+            (ngModelChange)="recalculatePercentFromPrices()"
+          />
+        </div>
+        <div class="form-group">
+          <label>Réduction % <small class="hint">(calculée automatiquement)</small></label>
+          <input
+            type="number"
+            class="input-readonly"
+            [ngModel]="model.discountPercentage"
+            [ngModelOptions]="{standalone: true}"
+            readonly
+            tabindex="-1"
+          />
+        </div>
+      </div>
+    }
+    @if (pricingMode === 'percent_only') {
+      <div class="form-row">
+        <div class="form-group">
+          <label>Réduction %</label>
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            max="100"
+            [(ngModel)]="model.discountPercentage"
+            name="discountPercentage"
+          />
+        </div>
+      </div>
+      <p class="hint pricing-hint">Les champs prix ne sont pas enregistrés : l’app étudiante affichera uniquement le pourcentage (ligne promo), pas les montants barrés.</p>
+    }
+    <div class="form-row">
+      <div class="form-group">
+        <label>Date début</label>
+        <input type="date" [(ngModel)]="model.startDate" name="startDate" />
+      </div>
+      <div class="form-group">
+        <label>Date fin</label>
+        <input type="date" [(ngModel)]="model.endDate" name="endDate" />
+      </div>
+      <div class="form-group">
+        <label>Nombre max de coupons</label>
+        <input type="number" min="0" [(ngModel)]="model.maxCoupons" name="maxCoupons" />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Passages max par jour / étudiant</label>
+        <input
+          type="number"
+          min="0"
+          [(ngModel)]="model.maxPassesPerDayPerUser"
+          name="maxPassesPerDayPerUser"
+        />
+        <small>0 ou vide = illimité</small>
+      </div>
+      <div class="form-group">
+        <label>Quantité max par passage</label>
+        <input
+          type="number"
+          min="0"
+          [(ngModel)]="model.maxQuantityPerPass"
+          name="maxQuantityPerPass"
+        />
+        <small>0 ou vide = illimité</small>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Universités reservees (abonnes uniquement, optionnel)</label>
+      @if (universities.length === 0) {
+        <small>Aucune universite active trouvee. Va dans la page "Universites" pour en creer.</small>
+      } @else {
+        <div class="card" style="max-height: 180px; overflow: auto; padding: 10px;">
+          @for (u of universities; track u.id) {
+            <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+              <input
+                type="checkbox"
+                [checked]="isUniversitySelected(u.name)"
+                (change)="toggleUniversity(u.name, $any($event.target).checked)"
+              />
+              <span>{{ u.name }}</span>
+              @if (u.code) { <small>({{ u.code }})</small> }
+            </label>
+          }
+        </div>
+      }
+      <small>Visible pour tous, mais utilisable seulement par les abonnes des universites cochees.</small>
+    </div>
+    <div class="form-group">
+      <button type="submit" class="btn btn-primary" [disabled]="loading">{{ loading ? 'Enregistrement...' : 'Enregistrer' }}</button>
+      <a routerLink="/admin/offers" class="btn btn-outline" style="margin-left: 0.5rem;">Annuler</a>
+    </div>
+  </div>
+</form>

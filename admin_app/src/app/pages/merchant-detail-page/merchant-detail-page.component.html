@@ -1,0 +1,218 @@
+<div>
+  <a routerLink="/admin/merchants" class="back-link">← Commerces</a>
+  @if (loading) {
+    <p>Chargement...</p>
+  } @else if (merchant) {
+    <h2>Commerce : {{ merchant.name }}</h2>
+    <div class="card">
+      <div class="merchant-header">
+        <div class="merchant-logo">
+          @if (logoDisplaySrc) {
+            <img [src]="logoDisplaySrc" alt="Logo commerce" />
+          } @else {
+            <div class="placeholder-logo">
+              <span>{{ merchant.name[0] }}</span>
+            </div>
+          }
+          <div class="logo-actions">
+            <div class="form-group">
+              <label class="field-label">Logo ou image du commerce</label>
+              <button type="button" class="btn btn-sm" (click)="fileInput.click()">
+                Choisir une image
+              </button>
+              <input #fileInput type="file" (change)="onLogoSelected($event)" accept="image/*" hidden />
+            </div>
+            @if (uploadingLogo) {
+              <span class="muted">Upload...</span>
+            }
+            @if (logoError) {
+              <p class="error-msg">{{ logoError }}</p>
+            }
+          </div>
+        </div>
+        <div class="merchant-info">
+          <p><strong>ID</strong> {{ merchant.id }}</p>
+          <p><strong>Propriétaire</strong> {{ merchant.ownerId }}</p>
+          <p>
+            <strong>Email</strong>
+            <input [(ngModel)]="email" name="email" />
+          </p>
+          <p>
+            <strong>Téléphone</strong>
+            <input [(ngModel)]="phone" name="phone" />
+          </p>
+          <p>
+            <strong>Ville</strong>
+            <select [(ngModel)]="city" name="cityHeader">
+              <option value="">--</option>
+              @for (item of filteredCities; track item.id) {
+                <option [value]="item.name">{{ item.name }}</option>
+              }
+            </select>
+          </p>
+          <p><strong>Statut</strong> <span class="badge badge-{{ merchant.status === 'APPROVED' ? 'success' : 'warning' }}">{{ merchant.status }}</span></p>
+          <p><strong>Inscription</strong> {{ merchant.createdAt | date:'medium' }}</p>
+        </div>
+      </div>
+      <hr>
+      <h3>Catégorie & localisation</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Catégorie</label>
+          <select [(ngModel)]="categoryId" name="categoryId">
+            <option [ngValue]="null">— Aucune catégorie —</option>
+            @for (c of categories; track c.id) {
+              <option [ngValue]="c.id">{{ c.name }}</option>
+            }
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Adresse</label>
+          <input [(ngModel)]="address" name="address" />
+        </div>
+        <div class="form-group">
+          <label>Ville</label>
+          <select [(ngModel)]="city" name="city">
+            <option value="">--</option>
+            @for (item of filteredCities; track item.id) {
+              <option [value]="item.name">{{ item.name }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Pays</label>
+          <select [(ngModel)]="country" name="country" (ngModelChange)="onCountryChanged()">
+            <option value="">--</option>
+            @for (item of countries; track item.id) {
+              <option [value]="item.name">{{ item.name }}</option>
+            }
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Latitude</label>
+          <input type="number" [(ngModel)]="lat" name="latitude" />
+        </div>
+        <div class="form-group">
+          <label>Longitude</label>
+          <input type="number" [(ngModel)]="lng" name="longitude" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Horaires d'ouverture</label>
+        <textarea [(ngModel)]="openingHours" name="openingHours" rows="3" placeholder="Ex: Lun-Dim 08h00 - 22h00"></textarea>
+      </div>
+      <div class="form-group">
+        <button class="btn btn-primary" (click)="saveLocation()" [disabled]="savingLocation">
+          {{ savingLocation ? 'Enregistrement...' : 'Enregistrer le commerce' }}
+        </button>
+        @if (saveMessage) {
+          <p style="margin-top: 0.5rem; color: #16a34a;">{{ saveMessage }}</p>
+        }
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>Offres du commerce</h3>
+        @if (offersLoading) {
+          <p>Chargement des offres...</p>
+        } @else if (!offers.length) {
+          <p>Aucune offre pour le moment.</p>
+        } @else {
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Titre</th>
+                <th>Prix initial</th>
+                <th>Prix final</th>
+                <th>Statut</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (o of offers; track o.id) {
+                <tr>
+                  <td>{{ o.id }}</td>
+                  <td>{{ o.title }}</td>
+                  <td>{{ o.originalPrice ?? '—' }}</td>
+                  <td>{{ o.finalPrice ?? '—' }}</td>
+                  <td><span class="badge badge-{{ o.status === 'ACTIVE' ? 'success' : 'warning' }}">{{ o.status }}</span></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </div>
+
+      <div class="card">
+        <h3>Transactions récentes</h3>
+        @if (transactionsLoading) {
+          <p>Chargement des transactions...</p>
+        } @else if (!transactions.length) {
+          <p>Aucune transaction pour ce commerce.</p>
+        } @else {
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Offre</th>
+                <th>Montant initial</th>
+                <th>Réduction</th>
+                <th>Montant final</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (t of transactions; track t.id) {
+                <tr>
+                  <td>{{ t.id }}</td>
+                  <td>{{ t.offerId }}</td>
+                  <td>{{ t.originalAmount ?? '—' }}</td>
+                  <td>{{ t.discountAmount ?? '—' }}</td>
+                  <td>{{ t.finalAmount ?? '—' }}</td>
+                  <td>{{ t.transactionDate | date:'short' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Avis des étudiants</h3>
+      @if (reviewsLoading) {
+        <p>Chargement des avis...</p>
+      } @else if (!reviews.length) {
+        <p>Aucun avis pour ce commerce.</p>
+      } @else {
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Note</th>
+              <th>Commentaire</th>
+              <th>Date</th>
+              <th>Statut</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of reviews; track r.id) {
+              <tr>
+                <td>{{ r.id }}</td>
+                <td>{{ r.rating ?? '—' }}</td>
+                <td>{{ r.comment || '—' }}</td>
+                <td>{{ r.createdAt | date:'short' }}</td>
+                <td>{{ r.status || 'VISIBLE' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+  }
+</div>

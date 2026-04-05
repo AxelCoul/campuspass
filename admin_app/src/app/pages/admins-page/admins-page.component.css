@@ -1,0 +1,9 @@
+.form-row { display: flex; gap: 1rem; flex-wrap: wrap; }
+.form-row .form-group { flex: 1; min-width: 140px; }
+.form-actions { display: flex; gap: 0.75rem; margin-top: 1rem; }
+.overlay-form { max-width: 480px; }
+.inline-edit { display: inline-flex; align-items: center; gap: 0.5rem; }
+.inline-edit select { width: auto; min-width: 140px; }
+.no-data { padding: 1rem; text-align: center; color: var(--text-muted); }
+.success-msg { color: var(--secondary); font-weight: 500; }
+.error-msg { color: var(--danger); font-weight: 500; }

@@ -1,0 +1,5 @@
+.subtitle { color: var(--text-muted); margin-top: -0.5rem; margin-bottom: 1rem; }
+.form-card { max-width: 560px; }
+.form-actions { margin-top: 1rem; }
+.error-msg { color: var(--danger); font-weight: 500; }
+.success-msg { color: var(--secondary); font-weight: 500; }

@@ -1,0 +1,95 @@
+<h2>Profil utilisateur</h2>
+
+<p><a routerLink="/admin/users" class="btn btn-outline">← Retour à la liste</a></p>
+
+@if (actionError) {
+  <p class="error-msg">{{ actionError }}</p>
+}
+@if (actionSuccess) {
+  <p class="success-msg">{{ actionSuccess }}</p>
+}
+
+@if (loading) {
+  <p>Chargement...</p>
+} @else if (user) {
+  <div class="card">
+    <h3>Informations</h3>
+    <dl class="info-dl">
+      <dt>Nom</dt>
+      <dd>{{ user.firstName }} {{ user.lastName }}</dd>
+      <dt>Email</dt>
+      <dd>{{ user.email }}</dd>
+      <dt>Téléphone</dt>
+      <dd>{{ user.phoneNumber || '-' }}</dd>
+      <dt>Rôle</dt>
+      <dd><span class="badge badge-info">{{ user.role }}</span></dd>
+      <dt>Statut</dt>
+      <dd><span class="badge badge-{{ (user.status || 'ACTIVE') === 'ACTIVE' ? 'success' : 'danger' }}">{{ user.status || 'ACTIVE' }}</span></dd>
+      <dt>Inscription</dt>
+      <dd>{{ user.createdAt | date:'short' }}</dd>
+    </dl>
+    <div class="profile-actions">
+      @if ((user.status || 'ACTIVE') === 'ACTIVE') {
+        <button type="button" class="btn btn-danger" (click)="suspend()">Suspendre le compte</button>
+      } @else {
+        <button type="button" class="btn btn-secondary" (click)="reactivate()">Réactiver le compte</button>
+      }
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Derniers coupons ({{ coupons.length }})</h3>
+    @if (coupons.length === 0) {
+      <p class="muted">Aucun coupon.</p>
+    } @else {
+      <table class="mini-table">
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Statut</th>
+            <th>Généré le</th>
+            <th>Utilisé le</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (c of coupons; track c.id) {
+            <tr>
+              <td>{{ c.couponCode }}</td>
+              <td><span class="badge badge-info">{{ c.status }}</span></td>
+              <td>{{ c.generatedAt | date:'short' }}</td>
+              <td>{{ c.usedAt | date:'short' || '-' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+
+  <div class="card">
+    <h3>Dernières transactions ({{ transactions.length }})</h3>
+    @if (transactions.length === 0) {
+      <p class="muted">Aucune transaction.</p>
+    } @else {
+      <table class="mini-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Montant final</th>
+            <th>Réduction</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (t of transactions; track t.id) {
+            <tr>
+              <td>{{ t.id }}</td>
+              <td>{{ t.finalAmount | number:'1.2-2' }} €</td>
+              <td>{{ t.discountAmount | number:'1.2-2' }} €</td>
+              <td>{{ t.transactionDate | date:'short' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+}
