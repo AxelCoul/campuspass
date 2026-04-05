@@ -22,7 +22,9 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
 
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
-        String databaseUrl = environment.getProperty("DATABASE_URL");
+        String databaseUrl = firstNonBlank(
+                environment.getProperty("DATABASE_URL"),
+                System.getenv("DATABASE_URL"));
         if (databaseUrl == null || databaseUrl.isBlank()) {
             return;
         }
@@ -33,7 +35,9 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
             return;
         }
         try {
-            URI uri = URI.create(databaseUrl);
+            // java.net.URI parse mal certains schémas postgres:// ; astuce Heroku/Render : parser comme http://
+            String forParsing = databaseUrl.replaceFirst("^postgres(ql)?://", "http://");
+            URI uri = URI.create(forParsing);
             String userInfo = uri.getUserInfo();
             if (userInfo == null) {
                 return;
@@ -42,6 +46,9 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
             String username = URLDecoder.decode(parts[0], StandardCharsets.UTF_8);
             String password = parts.length > 1 ? URLDecoder.decode(parts[1], StandardCharsets.UTF_8) : "";
 
+            if (uri.getHost() == null || uri.getHost().isBlank()) {
+                return;
+            }
             int port = uri.getPort() > 0 ? uri.getPort() : 5432;
             String path = uri.getPath();
             if (path != null && path.startsWith("/")) {
@@ -60,6 +67,16 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
         } catch (Exception ignored) {
             // laisser la config par défaut (application.properties)
         }
+    }
+
+    private static String firstNonBlank(String a, String b) {
+        if (a != null && !a.isBlank()) {
+            return a;
+        }
+        if (b != null && !b.isBlank()) {
+            return b;
+        }
+        return null;
     }
 
     @Override
