@@ -1,0 +1,42 @@
+# --- Racine monorepo CampusPass / student app ---
+
+# Secrets & env (ne jamais committer)
+.env
+.env.*
+!.env.example
+*.pem
+
+# IDE / OS
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db
+
+# --- Backend Java / Maven (tous modules) ---
+**/target/
+**/.mvn/wrapper/maven-wrapper.jar
+
+# --- Flutter / Dart ---
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/build/
+**/coverage/
+**/doc/api/
+**/ios/Flutter/.last_build_id
+**/android/app/debug
+**/android/app/profile
+**/android/app/release
+
+# --- Node / Angular ---
+**/node_modules/
+**/dist/
+**/.angular/
+
+# --- Uploads locaux backend ---
+**/uploads/
+
+# --- Logs & temporaires ---
+*.log
+*.tmp

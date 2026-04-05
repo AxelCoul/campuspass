@@ -1,0 +1,13 @@
+# Déploiement Render : Spring Boot nécessite runtime Docker (pas de runtime Java natif).
+# 1) Créer une base PostgreSQL sur Render et la lier au service web (variable DATABASE_URL).
+# 2) Définir les secrets sensibles (JWT, clés API) dans Environment, pas dans Git.
+services:
+  - type: web
+    name: campuspass-backend
+    runtime: docker
+    region: frankfurt
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    envVars:
+      - key: JAVA_TOOL_OPTIONS
+        value: "-XX:MaxRAMPercentage=75"

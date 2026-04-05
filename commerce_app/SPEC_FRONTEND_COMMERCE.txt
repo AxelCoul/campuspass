@@ -1,0 +1,306 @@
+================================================================================
+  SPÉCIFICATION FRONTEND COMMERCE - PASS CAMPUS MERCHANT (Flutter)
+  Accès, fonctionnalités, couleurs, navigation, pages, APIs
+================================================================================
+Date : 2026-03
+Projet : commerce_app (Flutter) - App type Uber Eats commerçant
+================================================================================
+
+═══════════════════════════════════════════════════════════════════════════════
+1. ACCÈS À L'APPLICATION COMMERCE
+═══════════════════════════════════════════════════════════════════════════════
+
+Nom de l'app : PASS CAMPUS Merchant
+
+Installation :
+  - Android (APK / Play Store)
+  - iOS (App Store)
+
+Connexion :
+  - Email
+  - Mot de passe
+
+API backend (à prévoir si pas existant) :
+  - POST /api/auth/merchant/login  { "email", "password" }
+  - Réponse : { "token", "id", "email", "firstName", "lastName", "role", "merchantId" }
+  - Alternative : POST /api/auth/login (compte MERCHANT) puis GET /api/merchants?ownerId=<userId>
+    pour récupérer le merchantId du commerce connecté.
+
+--------------------------------------------------------------------------------
+2. RÔLES CÔTÉ COMMERCE
+--------------------------------------------------------------------------------
+
+PROPRIÉTAIRE
+  - Gérer les offres (créer, modifier, supprimer, activer/désactiver)
+  - Voir les statistiques
+  - Gérer le personnel (si implémenté)
+  - Gérer les publicités (si implémenté)
+
+CAISSIER
+  - Scanner QR code
+  - Valider coupon
+  - Voir les transactions
+
+(La distinction Propriétaire / Caissier peut être gérée par un champ rôle
+ sur le profil merchant ou un tableau staff ; backend à adapter.)
+
+--------------------------------------------------------------------------------
+3. DESIGN GLOBAL
+--------------------------------------------------------------------------------
+
+Style :
+  - Mobile simple, rapide pour la caisse, interface claire
+
+Couleurs (à utiliser dans theme / AppColors) :
+  - Primary        #2D6CDF
+  - Secondary      #00C48C
+  - Background     #F4F6F9
+  - Card           #FFFFFF
+  - Success        #28A745
+  - Danger         #FF4D4F
+  - Warning        #FFC107
+  - Text           #1F2937
+  - Text muted     #6B7280
+
+--------------------------------------------------------------------------------
+4. NAVIGATION PRINCIPALE (MOBILE)
+--------------------------------------------------------------------------------
+
+Bottom Navigation (après login) :
+
+  [ Dashboard ]  [ Scanner ]  [ Offres ]  [ Transactions ]  [ Profil ]
+
+  - Dashboard    → /dashboard
+  - Scanner      → /scanner
+  - Offres       → /offers
+  - Transactions → /transactions
+  - Profil       → /profile
+
+Écrans sans bottom bar : Splash, Login, Coupon Validation (résultat scan),
+  Offer Create/Edit, Analytics, Ads, Notifications, Staff, Settings, Support.
+
+--------------------------------------------------------------------------------
+5. LISTE DES PAGES / ÉCRANS (≈ 16)
+--------------------------------------------------------------------------------
+
+ 1. Splash              /splash
+ 2. Login               /login
+ 3. Dashboard           /dashboard
+ 4. Scanner             /scanner
+ 5. Coupon Validation   /coupon-validation (résultat du scan)
+ 6. Liste offres        /offers
+ 7. Créer offre         /offers/create
+ 8. Modifier offre      /offers/edit/:id
+ 9. Transactions        /transactions
+10. Statistiques        /analytics
+11. Publicités          /ads
+12. Notifications       /notifications
+13. Profil commerce     /profile
+14. Personnel           /staff
+15. Paramètres          /settings
+16. Support             /support
+
+--------------------------------------------------------------------------------
+6. DÉTAIL PAR ÉCRAN
+--------------------------------------------------------------------------------
+
+--- 1) Splash (/splash)
+  - Logo PASS CAMPUS
+  - Indicateur de chargement
+  - Si token valide → Dashboard, sinon → Login
+
+--- 2) Login (/login)
+  - Champs : email, mot de passe
+  - Bouton : Connexion
+  - Lien : Mot de passe oublié
+  - API : POST /api/auth/merchant/login (ou /api/auth/login + récup merchantId)
+
+--- 3) Dashboard (/dashboard)
+  - Cartes : Coupons utilisés aujourd’hui, Revenu du jour, Offres actives, Visites
+  - Graphique : utilisation coupons par jour (optionnel)
+  - API : à définir (ex. GET /api/merchant/dashboard ou agrégation côté app)
+
+--- 4) Scanner (/scanner)
+  - Ouverture caméra / scan QR code
+  - Récupération du code coupon (ex. string dans le QR)
+  - Appel API : POST /api/coupons/validate?merchantId=<id>  body: { "couponCode": "..." }
+  - Selon réponse : navigation vers Coupon Validation (succès) ou message d’erreur
+    (Coupon expiré, déjà utilisé, invalide)
+
+--- 5) Coupon Validation (/coupon-validation)
+  - Affichage : Nom étudiant, Offre, Réduction, Montant final
+  - Bouton : Confirmer réduction (peut fermer l’écran et revenir au scanner)
+  - Données : passées en paramètre depuis le résultat de validate
+
+--- 6) Liste offres (/offers)
+  - Cards : Image, Titre, Réduction, Date expiration, Statut
+  - Actions : Modifier, Désactiver, Voir stats
+  - API : GET /api/offers?merchantId=<id>
+
+--- 7) Créer offre (/offers/create)
+  - Formulaire : Titre, Description, Image, Réduction %, Prix initial,
+    Date début, Date fin, Nombre max coupons
+  - Bouton : Publier offre
+  - API : POST /api/offers  (body selon OfferRequest backend)
+
+--- 8) Modifier offre (/offers/edit/:id)
+  - Même formulaire que création, pré-rempli
+  - API : PUT /api/offers/:id
+
+--- 9) Transactions (/transactions)
+  - Liste : ID, Étudiant, Offre, Montant, Réduction, Date
+  - Filtres : date, offre
+  - API : GET /api/transactions (backend à exposer pour merchant par merchantId)
+
+--- 10) Statistiques (/analytics)
+  - Graphiques : coupons utilisés, revenus, offres populaires
+  - API : GET /api/merchant/analytics ou agrégation
+
+--- 11) Publicités (/ads)
+  - Formulaire : Image, Position, Durée, Budget
+  - API : à définir (création de campagnes pub)
+
+--- 12) Notifications (/notifications)
+  - Liste des messages : nouveaux étudiants, offres expirées, stats
+  - API : GET /api/notifications (filtré par merchant si besoin)
+
+--- 13) Profil commerce (/profile)
+  - Infos : Nom commerce, Adresse, Téléphone, Email, Logo
+  - Actions : Modifier profil, Changer mot de passe
+  - API : GET /api/merchants/:id, PUT /api/merchants/:id
+
+--- 14) Personnel (/staff)
+  - Liste : Nom, Rôle, Statut
+  - Actions : Ajouter employé, Modifier rôle, Supprimer
+  - API : à définir (staff par merchant)
+
+--- 15) Paramètres (/settings)
+  - Options : Notifications, Langue, Sécurité
+
+--- 16) Support (/support)
+  - Contacter support, FAQ, Ouvrir ticket
+
+--------------------------------------------------------------------------------
+7. ARCHITECTURE FLUTTER
+--------------------------------------------------------------------------------
+
+Structure proposée :
+
+lib/
+├── main.dart
+├── app.dart                    # MaterialApp, theme, routes
+├── core/
+│   ├── theme/
+│   │   └── app_colors.dart     # Primary #2D6CDF, etc.
+│   ├── constants/
+│   └── utils/
+├── services/
+│   ├── api_client.dart         # HTTP + token
+│   ├── auth_service.dart
+│   ├── merchant_service.dart
+│   ├── offer_service.dart
+│   ├── coupon_service.dart
+│   └── transaction_service.dart
+├── models/
+│   ├── user.dart
+│   ├── merchant.dart
+│   ├── offer.dart
+│   ├── coupon.dart
+│   └── transaction.dart
+├── screens/
+│   ├── splash_screen.dart
+│   ├── login_screen.dart
+│   ├── dashboard_screen.dart
+│   ├── scanner_screen.dart
+│   ├── coupon_validation_screen.dart
+│   ├── offers_screen.dart
+│   ├── offer_create_screen.dart
+│   ├── offer_edit_screen.dart
+│   ├── transactions_screen.dart
+│   ├── analytics_screen.dart
+│   ├── ads_screen.dart
+│   ├── notifications_screen.dart
+│   ├── profile_screen.dart
+│   ├── staff_screen.dart
+│   ├── settings_screen.dart
+│   └── support_screen.dart
+├── widgets/
+│   ├── bottom_nav.dart
+│   ├── stat_card.dart
+│   └── ...
+└── routes/
+    └── app_routes.dart
+
+--------------------------------------------------------------------------------
+8. INTERACTIONS BACKEND (APIs)
+--------------------------------------------------------------------------------
+
+Authentification
+  - POST /api/auth/merchant/login  { "email", "password" }
+    → à créer si pas existant (sinon login + GET merchants?ownerId=)
+  - Réponse attendue : { "token", "id", "email", "firstName", "lastName", "role", "merchantId" }
+
+Merchant
+  - GET  /api/merchants?ownerId=<userId>   → liste (1 commerce pour 1 owner)
+  - GET  /api/merchants/:id
+  - PUT  /api/merchants/:id   (modifier profil)
+
+Offres
+  - GET  /api/offers?merchantId=<id>
+  - GET  /api/offers/:id
+  - POST /api/offers
+  - PUT  /api/offers/:id
+  - DELETE /api/offers/:id
+
+Coupons (validation par le commerce)
+  - POST /api/coupons/validate?merchantId=<id>   body: { "couponCode": "..." }
+  - Réponse : CouponResponse (détails coupon, offre, etc.)
+
+Transactions
+  - GET /api/transactions  (pour le merchant connecté)
+  - À exposer côté backend : GET /api/merchants/:id/transactions ou
+    GET /api/transactions?merchantId=<id> avec auth MERCHANT
+
+Dashboard / Analytics
+  - À définir : GET /api/merchant/dashboard, GET /api/merchant/analytics
+  - Ou calcul côté app à partir des offres, coupons, transactions
+
+Notifications
+  - GET /api/notifications (si existant, filtré par utilisateur ou merchant)
+
+--------------------------------------------------------------------------------
+9. FLUX DE NAVIGATION RÉSUMÉ
+--------------------------------------------------------------------------------
+
+  Splash
+    → (token ok) Dashboard
+    → (pas de token) Login
+
+  Login
+    → Succès → Dashboard (avec Bottom Nav)
+
+  Dashboard  ←→ Scanner ←→ Offres ←→ Transactions ←→ Profil
+       |           |          |            |            |
+       |           v          v            v            v
+       |      Coupon      Create/Edit   (liste)    Settings
+       |      Validation    Offer                 Staff
+       v                                              Support
+  Analytics
+  Ads
+  Notifications
+
+--------------------------------------------------------------------------------
+10. DÉPENDANCES FLUTTER SUGGÉRÉES
+--------------------------------------------------------------------------------
+
+  - flutter (SDK)
+  - provider ou riverpod (état global, auth, merchantId)
+  - go_router ou auto_route (navigation)
+  - http ou dio (API)
+  - qr_code_scanner ou mobile_scanner (scan QR)
+  - shared_preferences (stockage token)
+  - intl (dates, nombres)
+
+--------------------------------------------------------------------------------
+FIN DU DOCUMENT
+================================================================================

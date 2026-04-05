@@ -1,0 +1,143 @@
+================================================================================
+  PASS CAMPUS — CE QUI A ÉTÉ FAIT / CE QUI RESTE À FAIRE
+================================================================================
+Mise à jour : 2026-03
+================================================================================
+
+═══════════════════════════════════════════════════════════════════════════════
+1. BACKEND (Spring Boot)
+═══════════════════════════════════════════════════════════════════════════════
+
+✅ FAIT
+------
+• Auth : register, login, admin/login (JWT)
+• Users, Merchants, Offers, Coupons, Transactions, Payments, Categories
+• Admin : dashboard/stats, users, users/:id, students, admins (GET/POST/PATCH),
+  updateUserStatus, validateStudentCard, disableAdmin, updateAdminLevel,
+  dashboard/charts, logs, reviews (GET/PATCH status)
+• Coupon : validate (POST avec couponCode + merchantId) pour le commerce
+• Offres : CRUD avec merchantId
+• Sécurité : JWT, rôles (STUDENT, MERCHANT, ADMIN), CORS
+• Admin par défaut (DefaultAdminLoader) avec AdminProfile SUPER_ADMIN
+• Modèles : User, Merchant, Offer, Coupon, Transaction, Payment, Review,
+  StudentProfile, AdminProfile, LoginHistory, etc.
+
+❌ À FAIRE / OPTIONNEL
+----------------------
+• POST /api/auth/merchant/login (optionnel : login + GET merchants?ownerId= suffit)
+• GET transactions par merchant (ex. /api/merchants/:id/transactions)
+• Endpoints dashboard/analytics dédiés merchant (stats du jour, graphiques)
+• Mot de passe oublié (reset password)
+• Gestion personnel (staff) par commerce
+• Enregistrement LoginHistory à chaque login (pour les logs admin)
+
+--------------------------------------------------------------------------------
+2. FRONTEND ADMIN (Angular — admin_app)
+--------------------------------------------------------------------------------
+
+✅ FAIT
+------
+• Login (email, mot de passe, JWT), AuthGuard, AuthInterceptor
+• Layout : sidebar + header, déconnexion, email utilisateur
+• Palette : Primary #2D6CDF, Secondary #00C48C, etc.
+• Dashboard : widgets (étudiants, commerces, offres, coupons jour, transactions, revenus)
+  + graphiques (transactions/jour, nouveaux users/jour, top 5 offres)
+• Utilisateurs : liste (ID, Nom, Email, Rôle, Statut, Inscription), lien "Voir profil"
+• Profil utilisateur /admin/users/:id : infos, coupons, transactions, suspendre/réactiver
+• Étudiants : liste (API GET /admin/students), filtres (ville, université, statut),
+  actions Valider carte, Suspendre, Réactiver
+• Admins : liste, créer admin, modifier rôle, désactiver (SUPER_ADMIN)
+• Niveaux admin : adminLevelGuard(SUPER_ADMIN) sur /admin/admins et /admin/logs,
+  sidebar conditionnelle (Admins + Logs visibles seulement SUPER_ADMIN)
+• Avis : liste, filtre par commerce, Masquer/Afficher
+• Statistiques (Analytics) : cartes + graphiques (transactions, users, top offres)
+• Notifications : formulaire (titre, message, audience, date) — envoi à brancher API
+• Paramètres : formulaire (commission, durée coupons, email, notifications) — sauvegarde à brancher
+• Logs : page /admin/logs (liste connexions), réservée SUPER_ADMIN
+• Commerces : liste, détail, approve/reject (backend)
+• Offres : liste, créer, modifier (formulaire)
+• Coupons, Transactions, Paiements : tableaux avec données
+• Publicités : tableau liste
+• Catégories : CRUD (services présents)
+• Routes : users/:id, logs, admins avec guard
+
+❌ À FAIRE / OPTIONNEL
+----------------------
+• Mot de passe oublié : page + flux + API backend
+• Users : boutons Suspendre/Réactiver directement dans la liste (déjà sur le profil)
+• Offres : boutons Supprimer, Désactiver en liste
+• Coupons / Transactions / Paiements : filtres avancés (date, statut, etc.)
+• Publicités : CRUD complet (créer, modifier, upload image, positions)
+• Détail commerce : sections Offres du commerce, Transactions, Avis
+• Connecter Notifications et Paramètres aux APIs si backend prévu
+• Page Réclamations si prévue dans la spec
+
+--------------------------------------------------------------------------------
+3. FRONTEND COMMERCE (Flutter — commerce_app)
+--------------------------------------------------------------------------------
+
+✅ FAIT
+------
+• Splash → redirection login ou dashboard selon token + merchantId
+• Login (email, mot de passe), récupération merchantId via GET /merchants?ownerId=
+• Thème : AppColors (Primary #2D6CDF, Secondary #00C48C, etc.)
+• Main shell : Bottom Nav (Dashboard, Scanner, Offres, Transactions, Profil)
+• Dashboard : cartes stats (coupons jour, revenu, offres actives), liste offres, raccourcis
+• Scanner : caméra QR (mobile_scanner), appel POST /coupons/validate → écran résultat
+• Coupon Validation : affichage code, statut, offre, bouton "Scanner un autre"
+• Offres : liste (titre, réduction, statut), créer offre (formulaire), modifier (écran détail chargé)
+• Création offre : titre, description, prix, réduction % → POST /offers
+• Transactions : écran placeholder
+• Profil : email, commerce ID, Paramètres, Support, Déconnexion
+• Services : AuthService, MerchantService, OfferService, CouponService, ApiClient
+• Modèles : User, Merchant, Offer, Coupon
+• Routes : splash, login, /, coupon-validation, offers/create, offers/edit/:id
+• Android : label "PASS CAMPUS Merchant", permission caméra
+
+❌ À FAIRE / OPTIONNEL
+----------------------
+• Écran Statistiques (analytics) : graphiques coupons, revenus, offres populaires
+• Écran Publicités (ads) : formulaire image, position, durée, budget
+• Écran Notifications : liste des messages (offres expirées, etc.)
+• Profil commerce : formulaire modifier (nom, adresse, téléphone, logo) + changement MDP
+• Écran Personnel (staff) : liste, ajouter, modifier rôle
+• Écran Paramètres : notifications, langue, sécurité
+• Écran Support : contacter support, FAQ, ticket
+• Transactions : liste réelle (API GET par merchant)
+• Modifier offre : formulaire complet pré-rempli (actuellement affichage simple)
+• Dashboard : données réelles "coupons aujourd'hui", "revenu du jour" (API merchant stats)
+• Rôles Propriétaire / Caissier (masquer certaines entrées selon le rôle)
+
+--------------------------------------------------------------------------------
+4. APPLICATION ÉTUDIANT (campuspass_app / student app)
+--------------------------------------------------------------------------------
+
+À VÉRIFIER DANS LE PROJET
+-------------------------
+• Connexion étudiant, liste offres, génération coupon, QR code
+• Favoris, notifications, profil
+• (Détail selon la structure réelle du repo)
+
+--------------------------------------------------------------------------------
+5. RÉSUMÉ GLOBAL
+--------------------------------------------------------------------------------
+
+PRIORITÉ HAUTE (reste à faire)
+• Admin : Mot de passe oublié (page + API)
+• Commerce : Transactions (liste + API backend par merchant)
+• Commerce : Dashboard stats réelles (API merchant)
+• Commerce : Formulaire modification offre complet
+
+PRIORITÉ MOYENNE
+• Admin : Connecter envoi Notifications et sauvegarde Paramètres si API
+• Commerce : Analytics, Profil (édition), Paramètres, Support
+• Backend : GET transactions par merchant, endpoint stats merchant
+
+PRIORITÉ BASSE / OPTIONNEL
+• Commerce : Publicités, Personnel (staff), Notifications
+• Admin : Filtres avancés, actions en ligne sur liste Users
+• Rôles Propriétaire / Caissier côté commerce
+
+================================================================================
+FIN DU DOCUMENT
+================================================================================

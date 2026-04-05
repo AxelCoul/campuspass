@@ -1,0 +1,58 @@
+================================================================================
+  CONFIGURATION DU PORT DU BACKEND — Pass Campus
+================================================================================
+
+Les 3 frontends (App Étudiant, App Commerce, Admin Angular) communiquent avec
+le même backend. Si tu lances le backend sur un autre port, il faut mettre à
+jour la configuration à UN seul endroit par projet.
+
+--------------------------------------------------------------------------------
+  Backend (Spring Boot)
+--------------------------------------------------------------------------------
+
+  Fichier : backend/src/main/resources/application.properties
+  Ligne   : server.port=8081
+
+  Pour changer de port : modifie 8081 (ex. 8082).
+
+--------------------------------------------------------------------------------
+  App Étudiant (campuspass_app)
+--------------------------------------------------------------------------------
+
+  Fichier : campuspass_app/lib/config/api_config.dart
+  Ligne   : const int apiPort = 8081;
+
+  Mets la même valeur que server.port du backend.
+
+--------------------------------------------------------------------------------
+  App Commerce (commerce_app)
+--------------------------------------------------------------------------------
+
+  Fichier : commerce_app/lib/config/api_config.dart
+  Ligne   : const int apiPort = 8081;
+
+  Mets la même valeur que server.port du backend.
+
+--------------------------------------------------------------------------------
+  Admin Angular (admin_app)
+--------------------------------------------------------------------------------
+
+  Fichier : admin_app/src/app/config/api.config.ts
+  Ligne   : export const apiPort = 8081;
+
+  Mets la même valeur que server.port du backend.
+
+--------------------------------------------------------------------------------
+  RÉSUMÉ
+--------------------------------------------------------------------------------
+
+  Même port partout (ex. 8081) :
+    - backend : application.properties → server.port=8081
+    - campuspass_app : lib/config/api_config.dart → apiPort = 8081
+    - commerce_app : lib/config/api_config.dart → apiPort = 8081
+    - admin_app : src/app/config/api.config.ts → apiPort = 8081
+
+  Si tu changes le port : modifie ces 4 endroits pour que les 3 fronts
+  continuent à communiquer avec le backend.
+
+================================================================================

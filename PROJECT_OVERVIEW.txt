@@ -1,0 +1,550 @@
+PROJET CAMPUS PASS - VUE D'ENSEMBLE TECHNIQUE
+============================================
+
+Ce fichier décrit ce qui a été réalisé dans l'écosystème Campus Pass :
+- Backend Spring Boot
+- Application Étudiant (Flutter, `campuspass_app`)
+- Application Commerce (Flutter, `commerce_app`)
+- Application Admin (Angular, `admin_app`)
+
+Il résume la navigation, les pages, les fonctionnalités et l'état actuel de réalisation.
+
+----------------------------------------------------------------------
+1. BACKEND (SPRING BOOT)
+----------------------------------------------------------------------
+
+Stack :
+- Spring Boot 3
+- Spring Security + JWT
+- Spring Data JPA (PostgreSQL)
+- Validation, Web, etc.
+
+1.1. Modèle utilisateur et rôles
+--------------------------------
+
+Entité `User` avec rôles :
+- `STUDENT`
+- `MERCHANT`
+- `ADMIN`
+
+Auth :
+- `POST /api/auth/register` : inscription générique
+  - Le rôle est envoyé dans le body (`role: STUDENT` ou `MERCHANT`).
+  - Pour STUDENT : création d'un `StudentProfile`.
+  - Pour MERCHANT : peut créer un `Merchant` si `merchantName` est fourni.
+- `POST /api/auth/login` : login normal (tout rôle).
+- `POST /api/auth/admin/login` : login réservé aux admins (`UserRole.ADMIN`).
+
+JWT :
+- `JwtService` génère un token contenant `userId`, `email`, `role`.
+- `JwtAuthFilter` lit l'en-tête `Authorization: Bearer ...`, valide le token et place un `SecurityUser` dans le SecurityContext.
+
+Règles de sécurité (exemples) dans `SecurityConfig` :
+- `/api/auth/**` : public.
+- Endpoints d'administration et de gestion d'offres/commerces protégés par rôles (`hasRole("ADMIN")`, `hasAnyRole("MERCHANT","ADMIN")`, etc.).
+
+1.2. Commerces (Merchant)
+-------------------------
+
+Entité `Merchant` :
+- `id`, `ownerId`, `name`, `description`, `email`, `phone`, `website`, `logoUrl`, `coverImage`,
+  `categoryId`, `address`, `city`, `country`, `latitude`, `longitude`
+- `verified` (Boolean), `verificationDate` (LocalDateTime)
+- `status` (enum `MerchantStatus`) : `PENDING`, `APPROVED`, `REJECTED`, `SUSPENDED`
+- `createdAt`, `updatedAt`
+
+Repository :
+- `MerchantRepository` :
+  - `findByOwnerId(Long ownerId)`
+  - `findByStatus(MerchantStatus status)`
+
+Service `MerchantService` :
+- `findAll()` → tous les commerces
+- `findByOwnerId(ownerId)` → commerces d'un propriétaire
+- `getById(id)` → détail
+- `create(ownerId, MerchantRequest)` → création (utilisé côté API propriétaire)
+- `update(id, MerchantRequest)` → mise à jour
+- `getTransactionsByMerchantId(merchantId)` → transactions du commerce
+- `getStatsByMerchantId(merchantId)` → statistiques détaillées :
+  - coupons utilisés aujourd'hui
+  - revenu du jour
+  - nombre d'offres actives
+  - ventes totales via l'app
+  - réductions totales
+  - nombre de clients uniques
+  - top offre (titre + nombre d'utilisations)
+
+Controller `MerchantController` (`/api/merchants`) :
+- `GET /api/merchants` (optionnel `ownerId`) : liste
+- `GET /api/merchants/{id}` : détail
+- `GET /api/merchants/{id}/transactions`
+- `GET /api/merchants/{id}/stats`
+- `POST /api/merchants` : création (pour propriétaire connecté)
+- `PUT /api/merchants/{id}` : mise à jour
+
+1.3. Offres (Offer)
+-------------------
+
+Entité `Offer` :
+- `id`, `merchantId`, `categoryId`
+- `title`, `description`, `termsConditions`
+- `originalPrice`, `discountPercentage`, `discountAmount`, `finalPrice`
+- `imageUrl`
+- `maxCoupons`, `usedCoupons`
+- `startDate`, `endDate`
+- `status` (`OfferStatus`) : `PENDING`, `ACTIVE`, `INACTIVE`, `EXPIRED`, `DELETED`
+- `createdAt`, `updatedAt`
+
+Repository : `OfferRepository`
+- `findByMerchantIdOrderByCreatedAtDesc(merchantId)`
+- `findByStatus(OfferStatus status)`
+- `findByCategoryIdAndStatus(categoryId, status)`
+
+Service `OfferService` :
+- `findByMerchantId(merchantId)` : liste simple par commerce.
+- `findByMerchantIdAndFilter(merchantId, filter)` :
+  - Filtre côté commerce : `active`, `scheduled`, `expired`, `history`.
+  - Logique selon dates et statut (ACTIVE/PENDING, etc.).
+- `findActive()` : toutes les offres `ACTIVE` (côté étudiant).
+- `getById(id)`
+- `create(OfferRequest req)` :
+  - Mappe les champs.
+  - `usedCoupons = 0`.
+  - `status` :
+    - Si utilisateur courant est ADMIN → `ACTIVE`.
+    - Sinon (MERCHANT) → `PENDING`.
+- `update(id, OfferRequest)`
+- `delete(id)` → supprime en base.
+
+Modèle hybride déjà en place :
+- Offres créées par **commerçant** → `PENDING` (visibles dans l'app commerce, pas côté étudiant).
+- Offres créées par **admin** → `ACTIVE` (directement visibles pour les étudiants).
+
+Controller `OfferController` (`/api/offers`) :
+- `GET /api/offers` :
+  - sans params → `offerService.findActive()` (pour app étudiant).
+  - avec `merchantId` [+ `filter`] → listes côté commerce.
+- `GET /api/offers/{id}`
+- `POST /api/offers` → création
+- `PUT /api/offers/{id}` → update
+- `DELETE /api/offers/{id}` → delete
+
+1.4. Étudiants, abonnements et économies
+----------------------------------------
+
+Entités :
+- `StudentProfile` : infos supplémentaires (université, etc.).
+- `SubscriptionPlan` : plans d'abonnement (type, prix, durée...).
+- `StudentSubscription` :
+  - lien étudiant / plan
+  - dates de début/fin, `SubscriptionStatus`, etc.
+- `SubscriptionPayment` : paiements liés aux abonnements.
+- `Transaction` : transactions lors de l'utilisation d'une offre
+  (montants original, réduction, final, date, userId, merchantId, offerId, statut...).
+- `Coupon` : coupons générés / utilisés.
+
+Services :
+- `SubscriptionPlanService` : CRUD sur les plans.
+- `SubscriptionService` : logique métier abonnement (souscription, confirmation OTP mock, etc.).
+- `StudentService` :
+  - `getMe(studentId)` : renvoie `StudentMeResponse` :
+    - infos de base (nom, email, université...)
+    - `hasActiveSubscription` (booléen)
+    - `subscriptionEndDate`, `subscriptionPlanName`
+    - `totalSavings`, `loyaltyPoints`
+  - `getSavings(studentId)` : renvoie `StudentSavingsResponse` :
+    - `totalSaved`
+    - `offersUsedCount`
+    - `merchantsVisitedCount`
+    - historique d'économies (par transaction).
+
+Controller `StudentController` (`/api/student`) :
+- `GET /api/student/me` → statut et infos de l'étudiant.
+- `GET /api/student/savings` → économies.
+
+1.5. Panneau Admin (côté backend)
+---------------------------------
+
+Service `AdminService` :
+- `getDashboardStats()` : stats globales (nb étudiants, commerces, offres actives, coupons du jour, transactions, revenus, réductions totales, etc.).
+- `getPaymentDashboardStats()` : stats paiements (revenus, paiements aujourd'hui, ce mois-ci).
+- `getAllUsers()`, `getUserById(id)` : gestion utilisateurs.
+- `getAllCoupons()`, `getAllTransactions()`, `getAllPayments()` : listes complètes.
+- `getStudents()` : liste étudiants enrichie (université, carte vérifiée, coupons utilisés...).
+- `updateUserStatus(id, status)` : change statut utilisateur.
+- `validateStudentCard(userId)` : marque la carte étudiante comme vérifiée.
+- `getAdmins()`, `createAdmin()`, `updateAdminLevel()`, `disableAdmin()` : gestion admins.
+- `getDashboardCharts()` : données pour graphiques (transactions/jour, nouveaux utilisateurs/jour, top offres...).
+- `getLogs(limit)` : logs de connexions.
+- `getAllReviews(merchantId)` + `updateReviewStatus(id, status)` : gestion avis.
+- `updateOfferStatus(id, status)` : validation/désactivation d'offres par l'admin.
+- `approveMerchant(id)` / `rejectMerchant(id)` : validation / rejet d'un commerce (status + verified).
+
+Controller `AdminController` (`/api/admin`) :
+- Dashboard, utilisateurs, étudiants, coupons, transactions, paiements.
+- Plans d'abonnement : `/api/admin/plans` (CRUD).
+- Admins : `/api/admin/admins` (CRUD + rôles).
+- Reviews : `/api/admin/reviews`, `/api/admin/reviews/{id}/status`.
+- Logs : `/api/admin/logs`.
+- Offres : `PATCH /api/admin/offers/{id}/status`.
+- Commerces : `PUT /api/admin/merchants/{id}/approve`, `/reject`.
+
+
+----------------------------------------------------------------------
+2. APPLICATION ÉTUDIANT (FLUTTER - campuspass_app)
+----------------------------------------------------------------------
+
+Objectif : application mobile pour les étudiants
+- S'inscrire / se connecter.
+- S'abonner.
+- Explorer les offres.
+- Voir leurs économies.
+
+2.1. Thème
+----------
+
+Dans `core/theme/app_colors.dart` :
+- Couleurs cohérentes avec la marque Campus Pass :
+  - `primary` (bleu), `secondary` (vert), `background`, `card`, `text`, `textMuted`, `success`, `warning`, `danger`, etc.
+
+Dans `main.dart` :
+- `MaterialApp.router` avec `ThemeData` basé sur `ColorScheme.fromSeed` et `useMaterial3: true`.
+
+2.2. Navigation
+---------------
+
+Fichier : `lib/app_router.dart`
+
+Routes :
+- `/splash` → `SplashScreen`
+- `/onboarding` → `OnboardingScreen`
+- `/login` → `LoginScreen`
+- `/register` → `RegisterScreen`
+- `/subscription` → `SubscriptionScreen`
+- `/payment-otp` → `PaymentOtpScreen`
+- `/` → `MainShell` (shell avec les 5 onglets)
+
+Redirect logique dans `GoRouter` :
+- Si non connecté → redirige vers `/login` (sauf `/splash`, `/onboarding`, `/login`, `/register`).
+- Si déjà connecté → évite de revenir sur login / register / onboarding.
+
+2.3. Authentification étudiant
+------------------------------
+
+`services/auth_service.dart` :
+- Gère le token, `userId`, `email`, `firstName`, `lastName`, `role`, en local via `SharedPreferences`.
+- `init()` : recharge le token et configure `ApiClient`.
+- `register(...)` :
+  - Appelle `POST /auth/register` avec `role: STUDENT` + infos (nom, email, password, phone, university).
+  - Sauvegarde la session.
+- `login(email, password)` :
+  - Appelle `POST /auth/login`.
+  - Vérifie que `role == STUDENT`.
+  - Sauvegarde la session.
+- `logout()` : clear tous les champs + préférences + token sur `ApiClient`.
+
+2.4. API client
+---------------
+
+`services/api_client.dart` :
+- Singleton `ApiClient` avec `Dio`.
+- Base URL : `kApiBaseUrl = 'http://10.0.2.2:8081/api'`.
+- Ajoute automatiquement l'en-tête `Authorization: Bearer <token>` si token présent.
+
+2.5. Shell principal et onglets
+-------------------------------
+
+`screens/main_shell.dart` :
+- 5 onglets via `NavigationBar` :
+  1) Accueil (`HomeScreen`)
+  2) Explorer (`ExploreScreen`)
+  3) Économies (`SavingsScreen`)
+  4) Notifications (`NotificationsScreen`)
+  5) Profil (`ProfileScreen`)
+- Utilise un `IndexedStack` pour garder l'état de chaque écran.
+
+2.6. Écrans
+-----------
+
+2.6.1. SplashScreen
+- Fond bleu (`AppColors.primary`).
+- Icône `Icons.school`, texte "Campus Pass".
+- `CircularProgressIndicator`.
+- Appelle `ApiClient.instance.init()` + `AuthService.instance.init()` puis navigue vers `/` ou `/onboarding` selon connexion.
+
+2.6.2. OnboardingScreen
+- Présente brièvement l'app (texte marketing).
+- Boutons pour aller vers `/login` ou `/register`.
+
+2.6.3. LoginScreen & RegisterScreen
+- **Login** :
+  - Champs email + mot de passe.
+  - Bouton "Se connecter" → `AuthService.login`.
+  - Redirige vers `/` si succès.
+- **Register** :
+  - Champs prénom, nom, email, mot de passe, téléphone (optionnel), université (optionnel).
+  - Bouton "Créer mon compte" → `AuthService.register`.
+
+2.6.4. HomeScreen (Accueil)
+- AppBar :
+  - Titre "Bonjour, {Prénom}".
+- Carte "Offre lancement" :
+  - Icône pourcentage.
+  - Texte "Abonnement à 3000 FCFA".
+  - Bouton "S'abonner" → `/subscription`.
+- Section "Offres populaires" :
+  - Message orientant vers l'onglet Explorer.
+
+2.6.5. ExploreScreen (Explorer)
+- AppBar "Explorer".
+- Se connecte au backend via `OffersService` :
+  - `GET /offers` pour récupérer toutes les offres `ACTIVE`.
+- États :
+  - `loading` → `CircularProgressIndicator`.
+  - erreur → message rouge.
+  - liste vide → message "Aucune offre pour le moment. Reviens plus tard !".
+
+Cartes d'offres (`_OfferCard`) :
+- Image réseau via `resolveImageUrl` (ou placeholder).
+- Titre en gras.
+- Description courte (2 lignes max).
+- Prix :
+  - Prix promo (`finalPrice`) en gras.
+  - Ancien prix (`originalPrice`) barré si différent.
+- Date de fin si `endDate` présente.
+- **Cliquables** (InkWell) :
+  - Pour l'instant, affichent un `SnackBar` "Détail de l'offre à venir".
+  - Prêtes pour être reliées à un écran détail qui utilisera le statut d'abonnement (`StudentService.getMe()`).
+
+2.6.6. SavingsScreen (Économies)
+- Appelle `GET /student/savings`.
+- Affiche :
+  - Carte verte avec "Total économisé : X FCFA".
+  - 2 cartes stats :
+    - Offres utilisées.
+    - Commerces visités.
+  - Section "Historique" avec texte explicatif (l'historique détaillé pourra être ajouté ensuite).
+
+2.6.7. NotificationsScreen
+- Structure en place pour lister des notifications (à compléter).
+
+2.6.8. ProfileScreen
+- Affiche les infos de base (via `AuthService`) ;
+- Bouton "Déconnexion" → `AuthService.logout()` puis redirection login.
+
+2.7. Abonnements
+----------------
+
+`SubscriptionScreen` :
+- Charge les plans via `GET /api/admin/plans`.
+- Liste les plans avec :
+  - nom, prix, type, etc.
+- Chaque plan a un bouton "Choisir" qui appelle le backend de souscription (mock OM pour l'instant) et ensuite `/subscription/confirm-otp`.
+
+`PaymentOtpScreen` :
+- Affiche le montant.
+- Saisie du code OTP (mock : 1234).
+- Appelle `/subscription/confirm-otp`.
+- En cas de succès, message "Abonnement activé !" puis redirection `/`.
+
+Note : L'intégration réelle Flutterwave n'est pas encore branchée, mais toute la structure (plans, abonnements, paiements, écrans) est prête.
+
+
+----------------------------------------------------------------------
+3. APPLICATION COMMERCE (FLUTTER - commerce_app)
+----------------------------------------------------------------------
+
+Objectif : application pour les commerçants partenaires
+- Voir leurs stats.
+- Créer / gérer leurs offres.
+- Scanner/valider les coupons.
+- Voir leurs transactions.
+
+3.1. Thème
+----------
+
+Similaire à l'app étudiant :
+- `AppColors` avec `primary`, `secondary`, `background`, `card`, `text`, `textMuted`, `success`, `warning`, `danger`, etc.
+
+3.2. Navigation
+---------------
+
+Shell principal `MainShell` :
+- Onglets (NavigationBar) :
+  1) `DashboardScreen`
+  2) `ScannerScreen`
+  3) `OffersScreen`
+  4) `TransactionsScreen`
+  5) `ProfileScreen`
+- `IndexedStack` pour garder l'état de chaque onglet.
+- Quand on revient sur certains onglets (Dashboard / Offres), le shell appelle `load()` sur leurs `State` pour recharger les données.
+
+Si `AuthService.instance.merchantId == null` :
+- Affiche un écran expliquant qu'aucun commerce n'est associé au compte et propose de se déconnecter.
+
+3.3. Auth commerçant
+--------------------
+
+`services/auth_service.dart` (commerce_app) :
+- Login via `/auth/login` avec rôle MERCHANT.
+- Stocke le token, le `merchantId`, etc.
+- Initialise `ApiClient` pour toutes les requêtes.
+
+3.4. DashboardScreen
+--------------------
+
+Objectif : tableau de bord commerçant.
+
+Charge en parallèle :
+- `OfferService.instance.getByMerchantId(merchantId)`
+- `MerchantStatsService.instance.getByMerchantId(merchantId)`
+
+Affiche (en cartes) :
+- Coupons utilisés aujourd'hui.
+- Revenu du jour.
+- Offres actives.
+- Total d'offres.
+- Ventes totales via app.
+- Réductions accordées.
+- Clients uniques.
+- Top offre (titre + nb d'utilisations) si dispo.
+
+Section "Raccourcis" :
+- "Scanner un coupon" (vers onglet scanner).
+- "Créer une offre" (ouvre `/offers/create`).
+
+Pull-to-refresh (`RefreshIndicator`) pour recharger.
+
+3.5. OffersScreen
+-----------------
+
+Écran pour gérer les offres d'un commerce :
+
+Filtres :
+- `active`, `scheduled`, `expired`, `history`.
+- Gérés côté backend (OfferService + `matchFilter`).
+
+Chargement :
+- `OfferService.instance.getByMerchantIdWithFilter(merchantId, _filter)`.
+
+Affichage :
+- Si `_loading` → loader.
+- Si liste vide → message + bouton "Créer une offre".
+- Sinon → liste de cartes `_OfferCard` :
+  - Image promo (ou placeholder).
+  - Titre, label de réduction (prix promo vs prix original).
+  - Statut + dates de validité (et, selon le filtre, nombre d'utilisations, période...).
+  - Boutons :
+    - Éditer (ouvre `/offers/edit/{id}`).
+    - Supprimer :
+      - Boîte de dialogue de confirmation.
+      - `OfferService.instance.delete(id)` puis reload.
+
+Les statuts sont également rendus plus lisibles en français (dans le code existant / amélioré) :
+- `ACTIVE` → "Active (en ligne)", vert (`AppColors.success`).
+- `PENDING` → "En attente de validation", jaune (`AppColors.warning`).
+- `EXPIRED` → "Expirée".
+- `INACTIVE` → "Désactivée".
+
+3.6. ScannerScreen
+------------------
+
+Onglet dédié au scan des coupons :
+- Interface pour scanner un QR code présenté par l'étudiant.
+- Envoie ensuite les infos au backend pour valider le coupon et enregistrer une transaction (`Transaction` + `CouponStatus.USED`).
+
+(Le code précis n'est pas recopié ici mais la structure est en place et branchée au backend.)
+
+3.7. TransactionsScreen
+-----------------------
+
+Liste des transactions du commerce :
+- `TransactionResponseDto` depuis le backend.
+- Affiche :
+  - Montant original, réduction, montant final.
+  - Date.
+  - Statut.
+
+3.8. ProfileScreen
+------------------
+
+Affiche les infos du compte commerçant.
+- Bouton Déconnexion (clear token + retour login).
+
+
+----------------------------------------------------------------------
+4. APPLICATION ADMIN (ANGULAR - admin_app)
+----------------------------------------------------------------------
+
+Objectif : panneau d'administration pour superviser et piloter toute la plateforme.
+
+4.1. Thème et layout
+--------------------
+
+`styles.css` :
+- Couleurs :
+  - `--primary`: bleu, `--secondary`: vert, `--background`: gris clair,
+  - `--card`: blanc, `--text`, `--text-muted`, `--danger`, `--warning`.
+- `.btn`, `.btn-primary`, `.btn-outline`, `.badge-*`, `.card`, `.table-wrapper`, `table` stylés.
+
+Layout :
+- Sidebar sombre avec liens :
+  - Dashboard, Utilisateurs, Étudiants, Commerces, Offres, Coupons, Transactions, Paiements, Publicités, Catégories, Avis, Notifications, Statistiques, Admins, Paramètres, Logs système.
+- Header : "PASS CAMPUS / Panneau Admin / admin@passcampus.com / Déconnexion".
+- Zone de contenu centrale avec les différentes pages.
+
+4.2. Auth admin
+----------------
+
+`core/auth.service.ts` :
+- `login(email, password)` :
+  - POST `/auth/admin/login`.
+  - Sauvegarde `admin_token` + `admin_user` dans `localStorage`.
+- `logout()` :
+  - Clear token + user, redirige `/admin/login`.
+- `getCurrentUser()`, `isAuthenticated()`, `hasRole()`, `getAdminLevel()`, `hasAdminLevel()`.
+
+Guards :
+- `authGuard` : protège toutes les routes `/admin/**` (sauf `/admin/login`).
+- `adminLevelGuard(['SUPER_ADMIN'])` : protège certaines pages sensibles (Admins, Logs).
+
+4.3. Routes principales
+-----------------------
+
+Dans `app.routes.ts` :
+
+- `/admin/login` → `LoginPageComponent`.
+- `/admin` + enfants (protégés par `authGuard`) :
+  - `/dashboard` → `DashboardPageComponent`
+  - `/users` → `UsersPageComponent`
+  - `/users/:id` → `UserProfilePageComponent`
+  - `/students` → `StudentsPageComponent`
+  - `/merchants` → `MerchantsPageComponent`
+  - `/merchants/create` → `MerchantCreatePageComponent`
+  - `/merchants/:id` → `MerchantDetailPageComponent`
+  - `/offers` → `OffersPageComponent`
+  - `/offers/create` → `OfferFormPageComponent`
+  - `/offers/edit/:id` → `OfferFormPageComponent`
+  - `/coupons` → `CouponsPageComponent`
+  - `/transactions` → `TransactionsPageComponent`
+  - `/payments` → `PaymentsPageComponent`
+  - `/advertisements` → `AdvertisementsPageComponent`
+  - `/categories` → `CategoriesPageComponent`
+  - `/reviews` → `ReviewsPageComponent`
+  - `/notifications` → `NotificationsPageComponent`
+  - `/analytics` → `AnalyticsPageComponent`
+  - `/admins` → `AdminsPageComponent` (protégé `adminLevelGuard(['SUPER_ADMIN'])`)
+  - `/settings` → `SettingsPageComponent`
+  - `/logs` → `LogsPageComponent` (protégé `adminLevelGuard(['SUPER_ADMIN'])`)
+
+4.4. Pages et fonctionnalités
+-----------------------------
+
+- **Dashboard** :
+  - Affiche les stats globales (nombre d'étudiants, commerces, offres actives, coupons utilisés, revenus, etc.).
+  - Graphiques via `/api/admin/dashboard/charts`.
+
+- **Utilisateurs / Profil utilisateur** :
+  - Liste tous les users.
+  - Voir détail d'un utilisateur.
+  - Changer le statut (e.g. ACT
